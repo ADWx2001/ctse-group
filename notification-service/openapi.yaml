@@ -1,0 +1,160 @@
+openapi: 3.0.3
+info:
+  title: Notification Service API
+  description: |
+    Notification microservice for the Food Ordering System.
+    Receives events from Order Service, stores notifications, and sends emails.
+  version: 1.0.0
+  contact:
+    name: Student 4 - Notification Service
+servers:
+  - url: http://localhost:3004
+    description: Local development
+
+tags:
+  - name: Notifications
+    description: Notification management
+  - name: Internal
+    description: Internal endpoints called by other services
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+
+  /api/notifications/send:
+    post:
+      tags: [Internal]
+      summary: Send notification (called by Order Service)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSendRequest'
+      responses:
+        '201':
+          description: Notification sent and stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+
+  /api/notifications/user/{user_id}:
+    get:
+      tags: [Notifications]
+      summary: Get all notifications for a user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
+        '403':
+          description: Access denied
+
+  /api/notifications/{notification_id}/read:
+    put:
+      tags: [Notifications]
+      summary: Mark notification as read
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                is_read:
+                  type: boolean
+                  default: true
+      responses:
+        '200':
+          description: Notification updated
+        '404':
+          description: Notification not found
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    NotificationSendRequest:
+      type: object
+      required: [type, userId]
+      properties:
+        type:
+          type: string
+          enum: [order_confirmation, order_status_update]
+        userId:
+          type: string
+        userEmail:
+          type: string
+        userName:
+          type: string
+        orderId:
+          type: string
+        restaurantName:
+          type: string
+        totalAmount:
+          type: number
+        items:
+          type: array
+        estimatedDeliveryTime:
+          type: integer
+        status:
+          type: string
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        user_email:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        is_read:
+          type: boolean
+        is_email_sent:
+          type: boolean
+        order_id:
+          type: string
+        created_at:
+          type: string
+          format: date-time

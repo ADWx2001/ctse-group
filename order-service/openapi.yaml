@@ -1,0 +1,298 @@
+openapi: 3.0.3
+info:
+  title: Order Service API
+  description: |
+    Order management microservice for the Food Ordering System.
+    Handles order placement, tracking, and status management.
+    Communicates with User Service, Restaurant Service, and Notification Service.
+  version: 1.0.0
+  contact:
+    name: Student 3 - Order Service
+servers:
+  - url: http://localhost:3003
+    description: Local development
+  - url: https://order-service.your-domain.com
+    description: Production (AWS ECS)
+
+tags:
+  - name: Orders
+    description: Order management endpoints
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: order-service
+
+  /api/orders:
+    post:
+      tags: [Orders]
+      summary: Place a new order
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order placed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  order:
+                    $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      tags: [Orders]
+      summary: Get all orders for authenticated user
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of orders with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Get a single order by ID
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+
+    delete:
+      tags: [Orders]
+      summary: Cancel an order
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order cancelled
+        '400':
+          description: Order cannot be cancelled (already preparing/delivered)
+
+  /api/orders/{id}/status:
+    put:
+      tags: [Orders]
+      summary: Update order status
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [confirmed, preparing, out_for_delivery, delivered, cancelled]
+      responses:
+        '200':
+          description: Status updated
+        '400':
+          description: Invalid status transition
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CreateOrderRequest:
+      type: object
+      required: [restaurantId, items, deliveryAddress]
+      properties:
+        restaurantId:
+          type: string
+          example: rest-123
+        items:
+          type: array
+          items:
+            type: object
+            required: [menuItemId, quantity]
+            properties:
+              menuItemId:
+                type: string
+              quantity:
+                type: integer
+                minimum: 1
+        deliveryAddress:
+          type: object
+          required: [street, city]
+          properties:
+            street:
+              type: string
+            city:
+              type: string
+            state:
+              type: string
+            zipCode:
+              type: string
+            country:
+              type: string
+              default: Sri Lanka
+        specialInstructions:
+          type: string
+          maxLength: 500
+
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+        restaurantId:
+          type: string
+        restaurantName:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalAmount:
+          type: number
+        status:
+          type: string
+          enum: [pending, confirmed, preparing, out_for_delivery, delivered, cancelled]
+        deliveryAddress:
+          type: object
+        customerName:
+          type: string
+        statusHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+              updatedAt:
+                type: string
+                format: date-time
+        estimatedDeliveryTime:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrderItem:
+      type: object
+      properties:
+        menuItemId:
+          type: string
+        name:
+          type: string
+        price:
+          type: number
+        quantity:
+          type: integer
+        subtotal:
+          type: number
+
+    Pagination:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        pages:
+          type: integer
+        limit:
+          type: integer
+
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+    Unauthorized:
+      description: Authentication required

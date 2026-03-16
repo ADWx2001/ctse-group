@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6.0
+    container_name: food-ordering-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - food-ordering-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: food-ordering-user-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - MONGODB_URI=mongodb://mongo:27017/foodorder_users
+      - JWT_SECRET=super-secret-jwt-key-change-in-production
+      - JWT_EXPIRES_IN=7d
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - food-ordering-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  restaurant-service:
+    build:
+      context: ./restaurant-service
+      dockerfile: Dockerfile
+    container_name: food-ordering-restaurant-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - ENVIRONMENT=development
+      - PORT=3002
+      - DATABASE_URL=sqlite:///./restaurant.db
+      - JWT_SECRET=super-secret-jwt-key-change-in-production
+      - USER_SERVICE_URL=http://user-service:3001
+    depends_on:
+      user-service:
+        condition: service_healthy
+    networks:
+      - food-ordering-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: food-ordering-order-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - MONGODB_URI=mongodb://mongo:27017/foodorder_orders
+      - JWT_SECRET=super-secret-jwt-key-change-in-production
+      - JWT_EXPIRES_IN=7d
+      - USER_SERVICE_URL=http://user-service:3001
+      - RESTAURANT_SERVICE_URL=http://restaurant-service:3002
+      - NOTIFICATION_SERVICE_URL=http://notification-service:3004
+    depends_on:
+      mongo:
+        condition: service_healthy
+      user-service:
+        condition: service_healthy
+      restaurant-service:
+        condition: service_healthy
+    networks:
+      - food-ordering-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3003/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    container_name: food-ordering-notification-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - ENVIRONMENT=development
+      - PORT=3004
+      - DATABASE_URL=sqlite:///./notifications.db
+      - JWT_SECRET=super-secret-jwt-key-change-in-production
+      - ORDER_SERVICE_URL=http://order-service:3003
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_USER=your-email@gmail.com
+      - SMTP_PASSWORD=your-app-password
+      - FROM_EMAIL=noreply@foodordering.com
+    depends_on:
+      order-service:
+        condition: service_healthy
+    networks:
+      - food-ordering-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3004/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+networks:
+  food-ordering-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

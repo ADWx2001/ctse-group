@@ -1,0 +1,288 @@
+openapi: 3.0.3
+info:
+  title: Restaurant Service API
+  description: |
+    Restaurant and menu management microservice for the Food Ordering System.
+    Handles restaurant CRUD, menu item management, and is consumed by the Order Service.
+  version: 1.0.0
+  contact:
+    name: Student 2 - Restaurant Service
+servers:
+  - url: http://localhost:3002
+    description: Local development
+
+tags:
+  - name: Restaurants
+    description: Restaurant management
+  - name: Menu
+    description: Menu item management
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      responses:
+        '200':
+          description: Service is healthy
+
+  /api/restaurants:
+    get:
+      tags: [Restaurants]
+      summary: List all active restaurants
+      parameters:
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: cuisine_type
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of restaurants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Restaurant'
+
+    post:
+      tags: [Restaurants]
+      summary: Create a new restaurant (owner/admin)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantCreate'
+      responses:
+        '201':
+          description: Restaurant created
+
+  /api/restaurants/{restaurant_id}:
+    get:
+      tags: [Restaurants]
+      summary: Get restaurant with menu
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Restaurant details with menu
+        '404':
+          description: Restaurant not found
+
+    put:
+      tags: [Restaurants]
+      summary: Update restaurant
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantUpdate'
+      responses:
+        '200':
+          description: Restaurant updated
+
+    delete:
+      tags: [Restaurants]
+      summary: Delete restaurant (soft delete)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Restaurant deactivated
+
+  /api/menu/restaurant/{restaurant_id}:
+    get:
+      tags: [Menu]
+      summary: Get menu for a restaurant
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of menu items
+
+    post:
+      tags: [Menu]
+      summary: Add menu item to restaurant
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: restaurant_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemCreate'
+      responses:
+        '201':
+          description: Menu item created
+
+  /api/menu/{item_id}:
+    get:
+      tags: [Menu]
+      summary: Get single menu item (used by Order Service)
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Menu item details
+
+    put:
+      tags: [Menu]
+      summary: Update menu item
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuItemUpdate'
+      responses:
+        '200':
+          description: Menu item updated
+
+    delete:
+      tags: [Menu]
+      summary: Delete menu item
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Menu item deleted
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Restaurant:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        cuisine_type:
+          type: string
+        is_active:
+          type: boolean
+        owner_id:
+          type: string
+        rating:
+          type: number
+
+    RestaurantCreate:
+      type: object
+      required: [name, address, city]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        cuisine_type:
+          type: string
+
+    RestaurantUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        address:
+          type: string
+
+    MenuItemCreate:
+      type: object
+      required: [name, price]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+          minimum: 0
+        category:
+          type: string
+        is_available:
+          type: boolean
+        preparation_time:
+          type: integer
+
+    MenuItemUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+        is_available:
+          type: boolean
