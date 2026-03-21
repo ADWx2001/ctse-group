@@ -23,7 +23,7 @@ paths:
     get:
       summary: Health check
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
@@ -48,9 +48,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateOrderRequest'
+              $ref: "#/components/schemas/CreateOrderRequest"
       responses:
-        '201':
+        "201":
           description: Order placed successfully
           content:
             application/json:
@@ -60,11 +60,11 @@ paths:
                   message:
                     type: string
                   order:
-                    $ref: '#/components/schemas/Order'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                    $ref: "#/components/schemas/Order"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     get:
       tags: [Orders]
@@ -83,7 +83,7 @@ paths:
             type: integer
             default: 10
       responses:
-        '200':
+        "200":
           description: List of orders with pagination
           content:
             application/json:
@@ -93,11 +93,11 @@ paths:
                   orders:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Order'
+                      $ref: "#/components/schemas/Order"
                   pagination:
-                    $ref: '#/components/schemas/Pagination'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /api/orders/{id}:
     get:
@@ -112,7 +112,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Order details
           content:
             application/json:
@@ -120,8 +120,8 @@ paths:
                 type: object
                 properties:
                   order:
-                    $ref: '#/components/schemas/Order'
-        '404':
+                    $ref: "#/components/schemas/Order"
+        "404":
           description: Order not found
 
     delete:
@@ -136,9 +136,9 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Order cancelled
-        '400':
+        "400":
           description: Order cannot be cancelled (already preparing/delivered)
 
   /api/orders/{id}/status:
@@ -163,11 +163,18 @@ paths:
               properties:
                 status:
                   type: string
-                  enum: [confirmed, preparing, out_for_delivery, delivered, cancelled]
+                  enum:
+                    [
+                      confirmed,
+                      preparing,
+                      out_for_delivery,
+                      delivered,
+                      cancelled,
+                    ]
       responses:
-        '200':
+        "200":
           description: Status updated
-        '400':
+        "400":
           description: Invalid status transition
 
 components:
@@ -229,12 +236,20 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/OrderItem'
+            $ref: "#/components/schemas/OrderItem"
         totalAmount:
           type: number
         status:
           type: string
-          enum: [pending, confirmed, preparing, out_for_delivery, delivered, cancelled]
+          enum:
+            [
+              pending,
+              confirmed,
+              preparing,
+              out_for_delivery,
+              delivered,
+              cancelled,
+            ]
         deliveryAddress:
           type: object
         customerName:

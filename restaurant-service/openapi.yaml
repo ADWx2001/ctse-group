@@ -22,7 +22,7 @@ paths:
     get:
       summary: Health check
       responses:
-        '200':
+        "200":
           description: Service is healthy
 
   /api/restaurants:
@@ -39,14 +39,14 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: List of restaurants
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Restaurant'
+                  $ref: "#/components/schemas/Restaurant"
 
     post:
       tags: [Restaurants]
@@ -58,9 +58,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RestaurantCreate'
+              $ref: "#/components/schemas/RestaurantCreate"
       responses:
-        '201':
+        "201":
           description: Restaurant created
 
   /api/restaurants/{restaurant_id}:
@@ -74,9 +74,9 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Restaurant details with menu
-        '404':
+        "404":
           description: Restaurant not found
 
     put:
@@ -95,9 +95,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RestaurantUpdate'
+              $ref: "#/components/schemas/RestaurantUpdate"
       responses:
-        '200':
+        "200":
           description: Restaurant updated
 
     delete:
@@ -112,7 +112,7 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Restaurant deactivated
 
   /api/menu/restaurant/{restaurant_id}:
@@ -126,7 +126,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: List of menu items
 
     post:
@@ -145,9 +145,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MenuItemCreate'
+              $ref: "#/components/schemas/MenuItemCreate"
       responses:
-        '201':
+        "201":
           description: Menu item created
 
   /api/menu/{item_id}:
@@ -161,7 +161,7 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Menu item details
 
     put:
@@ -180,9 +180,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MenuItemUpdate'
+              $ref: "#/components/schemas/MenuItemUpdate"
       responses:
-        '200':
+        "200":
           description: Menu item updated
 
     delete:
@@ -197,7 +197,7 @@ paths:
           schema:
             type: string
       responses:
-        '204':
+        "204":
           description: Menu item deleted
 
 components:

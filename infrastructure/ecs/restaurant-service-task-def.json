@@ -20,8 +20,14 @@
       "environment": [
         { "name": "ENVIRONMENT", "value": "production" },
         { "name": "PORT", "value": "3002" },
-        { "name": "DATABASE_URL", "value": "sqlite+aiosqlite:///./restaurant.db" },
-        { "name": "USER_SERVICE_URL", "value": "http://user-service.food-ordering.local:3001" }
+        {
+          "name": "DATABASE_URL",
+          "value": "sqlite+aiosqlite:///./restaurant.db"
+        },
+        {
+          "name": "USER_SERVICE_URL",
+          "value": "http://user-service.food-ordering.local:3001"
+        }
       ],
       "secrets": [
         {
@@ -38,7 +44,10 @@
         }
       },
       "healthCheck": {
-        "command": ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:3002/health')\" || exit 1"],
+        "command": [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:3002/health')\" || exit 1"
+        ],
         "interval": 30,
         "timeout": 5,
         "retries": 3,

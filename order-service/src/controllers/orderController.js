@@ -1,7 +1,13 @@
-const Order = require('../models/Order');
-const { getRestaurant, getMenuItem } = require('../services/restaurantService');
-const { sendOrderConfirmation, sendStatusUpdate } = require('../services/notificationService');
-const { createOrderSchema, updateStatusSchema } = require('../validators/orderValidators');
+const Order = require("../models/Order");
+const { getRestaurant, getMenuItem } = require("../services/restaurantService");
+const {
+  sendOrderConfirmation,
+  sendStatusUpdate,
+} = require("../services/notificationService");
+const {
+  createOrderSchema,
+  updateStatusSchema,
+} = require("../validators/orderValidators");
 
 // POST /api/orders — Place a new order
 exports.createOrder = async (req, res, next) => {
@@ -25,7 +31,7 @@ exports.createOrder = async (req, res, next) => {
 
       if (!menuItem.is_available) {
         return res.status(400).json({
-          error: `Menu item "${menuItem.name}" is currently unavailable`
+          error: `Menu item "${menuItem.name}" is currently unavailable`,
         });
       }
 
@@ -35,7 +41,7 @@ exports.createOrder = async (req, res, next) => {
         name: menuItem.name,
         price: menuItem.price,
         quantity: item.quantity,
-        subtotal
+        subtotal,
       });
       totalAmount += subtotal;
     }
@@ -48,12 +54,12 @@ exports.createOrder = async (req, res, next) => {
       items: orderItems,
       totalAmount,
       deliveryAddress,
-      customerName: req.user.name || 'Customer',
-      customerEmail: req.user.email || '',
-      customerPhone: req.user.phone || '',
+      customerName: req.user.name || "Customer",
+      customerEmail: req.user.email || "",
+      customerPhone: req.user.phone || "",
       specialInstructions,
-      status: 'pending',
-      statusHistory: [{ status: 'pending' }]
+      status: "pending",
+      statusHistory: [{ status: "pending" }],
     });
 
     // 4. Send notification (non-blocking)
@@ -65,12 +71,12 @@ exports.createOrder = async (req, res, next) => {
       restaurantName: restaurant.name,
       totalAmount,
       items: orderItems,
-      estimatedDeliveryTime: order.estimatedDeliveryTime
+      estimatedDeliveryTime: order.estimatedDeliveryTime,
     });
 
     res.status(201).json({
-      message: 'Order placed successfully',
-      order
+      message: "Order placed successfully",
+      order,
     });
   } catch (err) {
     if (err.statusCode) {
@@ -90,13 +96,13 @@ exports.getUserOrders = async (req, res, next) => {
     const filter = { userId: req.user.id };
 
     // Allow admins to see all orders
-    if (req.user.role === 'admin' && req.query.all === 'true') {
+    if (req.user.role === "admin" && req.query.all === "true") {
       delete filter.userId;
     }
 
     const [orders, total] = await Promise.all([
       Order.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
-      Order.countDocuments(filter)
+      Order.countDocuments(filter),
     ]);
 
     res.status(200).json({
@@ -105,8 +111,8 @@ exports.getUserOrders = async (req, res, next) => {
         total,
         page,
         pages: Math.ceil(total / limit),
-        limit
-      }
+        limit,
+      },
     });
   } catch (err) {
     next(err);
@@ -118,12 +124,12 @@ exports.getOrder = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     // Users can only view their own orders (admins can view any)
-    if (req.user.role !== 'admin' && order.userId !== req.user.id) {
-      return res.status(403).json({ error: 'Access forbidden' });
+    if (req.user.role !== "admin" && order.userId !== req.user.id) {
+      return res.status(403).json({ error: "Access forbidden" });
     }
 
     res.status(200).json({ order });
@@ -142,22 +148,22 @@ exports.updateOrderStatus = async (req, res, next) => {
 
     const order = await Order.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
     // Validate status transition
     const validTransitions = {
-      pending: ['confirmed', 'cancelled'],
-      confirmed: ['preparing', 'cancelled'],
-      preparing: ['out_for_delivery', 'cancelled'],
-      out_for_delivery: ['delivered'],
+      pending: ["confirmed", "cancelled"],
+      confirmed: ["preparing", "cancelled"],
+      preparing: ["out_for_delivery", "cancelled"],
+      out_for_delivery: ["delivered"],
       delivered: [],
-      cancelled: []
+      cancelled: [],
     };
 
     if (!validTransitions[order.status].includes(value.status)) {
       return res.status(400).json({
-        error: `Cannot transition from '${order.status}' to '${value.status}'`
+        error: `Cannot transition from '${order.status}' to '${value.status}'`,
       });
     }
 
@@ -167,7 +173,7 @@ exports.updateOrderStatus = async (req, res, next) => {
     // Send notification about status change (non-blocking)
     sendStatusUpdate(order, value.status);
 
-    res.status(200).json({ message: 'Order status updated', order });
+    res.status(200).json({ message: "Order status updated", order });
   } catch (err) {
     next(err);
   }
@@ -178,25 +184,26 @@ exports.cancelOrder = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ error: "Order not found" });
     }
 
-    if (order.userId !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Access forbidden' });
+    if (order.userId !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ error: "Access forbidden" });
     }
 
-    if (!['pending', 'confirmed'].includes(order.status)) {
+    if (!["pending", "confirmed"].includes(order.status)) {
       return res.status(400).json({
-        error: 'Order can only be cancelled when in pending or confirmed status'
+        error:
+          "Order can only be cancelled when in pending or confirmed status",
       });
     }
 
-    order.status = 'cancelled';
+    order.status = "cancelled";
     await order.save();
 
-    sendStatusUpdate(order, 'cancelled');
+    sendStatusUpdate(order, "cancelled");
 
-    res.status(200).json({ message: 'Order cancelled successfully', order });
+    res.status(200).json({ message: "Order cancelled successfully", order });
   } catch (err) {
     next(err);
   }

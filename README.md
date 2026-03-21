@@ -29,12 +29,12 @@ A secure, containerized, cloud-deployed food ordering system built using microse
 
 ## Microservices
 
-| Service | Tech Stack | Port | Student | Responsibility |
-|---------|-----------|------|---------|----------------|
-| **User Service** | Node.js, Express, MongoDB | 3001 | Student 1 | Authentication, JWT issuance, user profile management |
-| **Restaurant Service** | Python, FastAPI, SQLite/PostgreSQL | 3002 | Student 2 | Restaurant listings, menu management |
-| **Order Service** | Node.js, Express, MongoDB | 3003 | Student 3 | Order placement, tracking, inter-service orchestration |
-| **Notification Service** | Python, FastAPI, SQLite | 3004 | Student 4 | Email/push notifications for order events |
+| Service                  | Tech Stack                         | Port | Student   | Responsibility                                         |
+| ------------------------ | ---------------------------------- | ---- | --------- | ------------------------------------------------------ |
+| **User Service**         | Node.js, Express, MongoDB          | 3001 | Student 1 | Authentication, JWT issuance, user profile management  |
+| **Restaurant Service**   | Python, FastAPI, SQLite/PostgreSQL | 3002 | Student 2 | Restaurant listings, menu management                   |
+| **Order Service**        | Node.js, Express, MongoDB          | 3003 | Student 3 | Order placement, tracking, inter-service orchestration |
+| **Notification Service** | Python, FastAPI, SQLite            | 3004 | Student 4 | Email/push notifications for order events              |
 
 ## Inter-Service Communication
 
@@ -61,6 +61,7 @@ Restaurant Svc ──calls──► User Service      (validate JWT for protecte
 ## Quick Start (Local Development)
 
 ### Prerequisites
+
 - Docker & Docker Compose
 - Node.js 18+
 - Python 3.11+
@@ -83,13 +84,16 @@ docker-compose up --build
 ```
 
 Services will be available at:
+
 - User Service: http://localhost:3001
 - Restaurant Service: http://localhost:3002
 - Order Service: http://localhost:3003
 - Notification Service: http://localhost:3004
 
 ### API Documentation
+
 Each service exposes Swagger UI:
+
 - http://localhost:3001/api-docs
 - http://localhost:3002/docs
 - http://localhost:3003/api-docs
@@ -121,7 +125,9 @@ food-ordering-system/
 ## DevOps Practices Implemented
 
 ### CI/CD Pipeline (GitHub Actions)
+
 Each microservice has its own GitHub Actions workflow that:
+
 1. **Lint & Test** — Runs unit tests with coverage reporting
 2. **SAST Scan** — SonarCloud static analysis
 3. **Dependency Scan** — Snyk vulnerability check
@@ -130,6 +136,7 @@ Each microservice has its own GitHub Actions workflow that:
 6. **Deploy** — Updates AWS ECS service with new image
 
 ### Security Measures (DevSecOps)
+
 - JWT authentication with expiry on all protected routes
 - bcrypt password hashing (salt rounds: 12)
 - Helmet.js HTTP security headers
@@ -143,6 +150,7 @@ Each microservice has its own GitHub Actions workflow that:
 - CORS configuration
 
 ### Cloud Deployment (AWS)
+
 - **Container Registry**: AWS ECR (Elastic Container Registry)
 - **Orchestration**: AWS ECS Fargate
 - **Secrets**: AWS Secrets Manager
@@ -154,40 +162,44 @@ Each microservice has its own GitHub Actions workflow that:
 ## API Endpoints Summary
 
 ### User Service (port 3001)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | /api/auth/register | No | Register new user |
-| POST | /api/auth/login | No | Login and get JWT |
-| GET | /api/users/profile | JWT | Get own profile |
-| PUT | /api/users/profile | JWT | Update profile |
-| GET | /api/users/validate | Internal | Validate JWT (internal) |
+
+| Method | Path                | Auth     | Description             |
+| ------ | ------------------- | -------- | ----------------------- |
+| POST   | /api/auth/register  | No       | Register new user       |
+| POST   | /api/auth/login     | No       | Login and get JWT       |
+| GET    | /api/users/profile  | JWT      | Get own profile         |
+| PUT    | /api/users/profile  | JWT      | Update profile          |
+| GET    | /api/users/validate | Internal | Validate JWT (internal) |
 
 ### Restaurant Service (port 3002)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | /api/restaurants | No | List all restaurants |
-| GET | /api/restaurants/{id} | No | Get restaurant details |
-| POST | /api/restaurants | JWT | Create restaurant |
-| GET | /api/restaurants/{id}/menu | No | Get menu |
-| POST | /api/restaurants/{id}/menu | JWT | Add menu item |
-| PUT | /api/menu/{id} | JWT | Update menu item |
-| DELETE | /api/menu/{id} | JWT | Delete menu item |
+
+| Method | Path                       | Auth | Description            |
+| ------ | -------------------------- | ---- | ---------------------- |
+| GET    | /api/restaurants           | No   | List all restaurants   |
+| GET    | /api/restaurants/{id}      | No   | Get restaurant details |
+| POST   | /api/restaurants           | JWT  | Create restaurant      |
+| GET    | /api/restaurants/{id}/menu | No   | Get menu               |
+| POST   | /api/restaurants/{id}/menu | JWT  | Add menu item          |
+| PUT    | /api/menu/{id}             | JWT  | Update menu item       |
+| DELETE | /api/menu/{id}             | JWT  | Delete menu item       |
 
 ### Order Service (port 3003)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | /api/orders | JWT | Place new order |
-| GET | /api/orders | JWT | Get user's orders |
-| GET | /api/orders/:id | JWT | Get order by ID |
-| PUT | /api/orders/:id/status | JWT | Update order status |
-| DELETE | /api/orders/:id | JWT | Cancel order |
+
+| Method | Path                   | Auth | Description         |
+| ------ | ---------------------- | ---- | ------------------- |
+| POST   | /api/orders            | JWT  | Place new order     |
+| GET    | /api/orders            | JWT  | Get user's orders   |
+| GET    | /api/orders/:id        | JWT  | Get order by ID     |
+| PUT    | /api/orders/:id/status | JWT  | Update order status |
+| DELETE | /api/orders/:id        | JWT  | Cancel order        |
 
 ### Notification Service (port 3004)
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| POST | /api/notifications/send | Internal | Send notification |
-| GET | /api/notifications/user/{userId} | JWT | Get user notifications |
-| PUT | /api/notifications/{id}/read | JWT | Mark as read |
+
+| Method | Path                             | Auth     | Description            |
+| ------ | -------------------------------- | -------- | ---------------------- |
+| POST   | /api/notifications/send          | Internal | Send notification      |
+| GET    | /api/notifications/user/{userId} | JWT      | Get user notifications |
+| PUT    | /api/notifications/{id}/read     | JWT      | Mark as read           |
 
 ---
 
@@ -202,6 +214,7 @@ See `.env.example` in each service directory for required configuration.
 See individual service READMEs for service-specific challenges.
 
 **Integration challenges:**
+
 - JWT secret must be shared across all services — managed via environment variables / AWS Secrets Manager
 - Service discovery in ECS — handled using ECS Service Connect / environment variable URLs
 - Database migrations — automated in CI/CD pipeline
@@ -210,9 +223,9 @@ See individual service READMEs for service-specific challenges.
 
 ## Team Members
 
-| Student | Microservice | Role |
-|---------|-------------|------|
-| Student 1 | User Service | Auth & Identity |
-| Student 2 | Restaurant Service | Menu & Catalog |
-| Student 3 | Order Service | Order Orchestration |
-| Student 4 | Notification Service | Alerts & Comms |
+| Student   | Microservice         | Role                |
+| --------- | -------------------- | ------------------- |
+| Student 1 | User Service         | Auth & Identity     |
+| Student 2 | Restaurant Service   | Menu & Catalog      |
+| Student 3 | Order Service        | Order Orchestration |
+| Student 4 | Notification Service | Alerts & Comms      |

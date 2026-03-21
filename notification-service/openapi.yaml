@@ -22,7 +22,7 @@ paths:
     get:
       summary: Health check
       responses:
-        '200':
+        "200":
           description: Service is healthy
 
   /api/notifications/send:
@@ -34,14 +34,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NotificationSendRequest'
+              $ref: "#/components/schemas/NotificationSendRequest"
       responses:
-        '201':
+        "201":
           description: Notification sent and stored
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Notification'
+                $ref: "#/components/schemas/Notification"
 
   /api/notifications/user/{user_id}:
     get:
@@ -61,15 +61,15 @@ paths:
             type: boolean
             default: false
       responses:
-        '200':
+        "200":
           description: List of notifications
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Notification'
-        '403':
+                  $ref: "#/components/schemas/Notification"
+        "403":
           description: Access denied
 
   /api/notifications/{notification_id}/read:
@@ -95,9 +95,9 @@ paths:
                   type: boolean
                   default: true
       responses:
-        '200':
+        "200":
           description: Notification updated
-        '404':
+        "404":
           description: Notification not found
 
 components:

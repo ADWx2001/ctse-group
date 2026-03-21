@@ -1,13 +1,11 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const { registerSchema, loginSchema } = require('../validators/authValidators');
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const { registerSchema, loginSchema } = require("../validators/authValidators");
 
 const generateToken = (userId, role) => {
-  return jwt.sign(
-    { id: userId, role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+  return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
+    expiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  });
 };
 
 // POST /api/auth/register
@@ -22,16 +20,16 @@ exports.register = async (req, res, next) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(409).json({ error: 'Email already registered' });
+      return res.status(409).json({ error: "Email already registered" });
     }
 
     const user = await User.create({ name, email, password, phone, role });
     const token = generateToken(user._id, user.role);
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       token,
-      user
+      user,
     });
   } catch (err) {
     next(err);
@@ -48,14 +46,14 @@ exports.login = async (req, res, next) => {
 
     const { email, password } = value;
 
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     if (!user || !user.isActive) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
     // Update last login timestamp
@@ -65,9 +63,9 @@ exports.login = async (req, res, next) => {
     const token = generateToken(user._id, user.role);
 
     res.status(200).json({
-      message: 'Login successful',
+      message: "Login successful",
       token,
-      user
+      user,
     });
   } catch (err) {
     next(err);
@@ -78,16 +76,18 @@ exports.login = async (req, res, next) => {
 exports.validate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ valid: false, error: 'No token provided' });
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ valid: false, error: "No token provided" });
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findById(decoded.id);
     if (!user || !user.isActive) {
-      return res.status(401).json({ valid: false, error: 'User not found or inactive' });
+      return res
+        .status(401)
+        .json({ valid: false, error: "User not found or inactive" });
     }
 
     res.status(200).json({
@@ -98,12 +98,14 @@ exports.validate = async (req, res, next) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        address: user.address
-      }
+        address: user.address,
+      },
     });
   } catch (err) {
-    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-      return res.status(401).json({ valid: false, error: 'Invalid or expired token' });
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return res
+        .status(401)
+        .json({ valid: false, error: "Invalid or expired token" });
     }
     next(err);
   }

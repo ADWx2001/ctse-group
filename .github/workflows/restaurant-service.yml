@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'restaurant-service/**'
-      - '.github/workflows/restaurant-service.yml'
+      - "restaurant-service/**"
+      - ".github/workflows/restaurant-service.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'restaurant-service/**'
+      - "restaurant-service/**"
 
 env:
   SERVICE_NAME: restaurant-service
@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |

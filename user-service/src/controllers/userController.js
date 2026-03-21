@@ -1,12 +1,12 @@
-const User = require('../models/User');
-const { updateProfileSchema } = require('../validators/authValidators');
+const User = require("../models/User");
+const { updateProfileSchema } = require("../validators/authValidators");
 
 // GET /api/users/profile
 exports.getProfile = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
     res.status(200).json({ user });
   } catch (err) {
@@ -29,14 +29,14 @@ exports.updateProfile = async (req, res, next) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { $set: value },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ message: 'Profile updated successfully', user });
+    res.status(200).json({ message: "Profile updated successfully", user });
   } catch (err) {
     next(err);
   }
@@ -48,14 +48,14 @@ exports.deleteProfile = async (req, res, next) => {
     const user = await User.findByIdAndUpdate(
       req.user.id,
       { isActive: false },
-      { new: true }
+      { new: true },
     );
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-    res.status(200).json({ message: 'Account deactivated successfully' });
+    res.status(200).json({ message: "Account deactivated successfully" });
   } catch (err) {
     next(err);
   }

@@ -4,12 +4,12 @@ on:
   push:
     branches: [main]
     paths:
-      - 'user-service/**'
-      - '.github/workflows/user-service.yml'
+      - "user-service/**"
+      - ".github/workflows/user-service.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'user-service/**'
+      - "user-service/**"
 
 env:
   SERVICE_NAME: user-service
@@ -31,8 +31,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
           cache-dependency-path: user-service/package-lock.json
 
       - name: Install dependencies

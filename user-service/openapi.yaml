@@ -27,7 +27,7 @@ paths:
     get:
       summary: Health check
       responses:
-        '200':
+        "200":
           description: Service is healthy
           content:
             application/json:
@@ -53,17 +53,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegisterRequest'
+              $ref: "#/components/schemas/RegisterRequest"
       responses:
-        '201':
+        "201":
           description: User created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
           description: Email already registered
 
   /api/auth/login:
@@ -75,17 +75,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/LoginRequest'
+              $ref: "#/components/schemas/LoginRequest"
       responses:
-        '200':
+        "200":
           description: Login successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AuthResponse'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
           description: Invalid credentials
 
   /api/auth/validate:
@@ -95,7 +95,7 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Token is valid
           content:
             application/json:
@@ -105,8 +105,8 @@ paths:
                   valid:
                     type: boolean
                   user:
-                    $ref: '#/components/schemas/UserSummary'
-        '401':
+                    $ref: "#/components/schemas/UserSummary"
+        "401":
           description: Invalid or expired token
 
   /api/users/profile:
@@ -116,7 +116,7 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: User profile
           content:
             application/json:
@@ -124,9 +124,9 @@ paths:
                 type: object
                 properties:
                   user:
-                    $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+                    $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     put:
       tags: [User Profile]
@@ -138,14 +138,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateProfileRequest'
+              $ref: "#/components/schemas/UpdateProfileRequest"
       responses:
-        '200':
+        "200":
           description: Profile updated
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
     delete:
       tags: [User Profile]
@@ -153,10 +153,10 @@ paths:
       security:
         - BearerAuth: []
       responses:
-        '200':
+        "200":
           description: Account deactivated
-        '401':
-          $ref: '#/components/responses/Unauthorized'
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
 components:
   securitySchemes:
@@ -209,7 +209,7 @@ components:
         token:
           type: string
         user:
-          $ref: '#/components/schemas/User'
+          $ref: "#/components/schemas/User"
 
     User:
       type: object
@@ -226,7 +226,7 @@ components:
         phone:
           type: string
         address:
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
         isActive:
           type: boolean
         createdAt:
@@ -272,7 +272,7 @@ components:
         phone:
           type: string
         address:
-          $ref: '#/components/schemas/Address'
+          $ref: "#/components/schemas/Address"
 
   responses:
     BadRequest:

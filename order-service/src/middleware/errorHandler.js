@@ -4,7 +4,7 @@ const notFound = (req, res, next) => {
 
 const errorHandler = (err, req, res, next) => {
   let statusCode = err.statusCode || 500;
-  let message = err.message || 'Internal server error';
+  let message = err.message || "Internal server error";
 
   if (err.code === 11000) {
     statusCode = 409;
@@ -12,19 +12,21 @@ const errorHandler = (err, req, res, next) => {
     message = `${field} already exists`;
   }
 
-  if (err.name === 'ValidationError') {
+  if (err.name === "ValidationError") {
     statusCode = 400;
-    message = Object.values(err.errors).map(e => e.message).join(', ');
+    message = Object.values(err.errors)
+      .map((e) => e.message)
+      .join(", ");
   }
 
-  if (err.name === 'CastError') {
+  if (err.name === "CastError") {
     statusCode = 400;
-    message = 'Invalid ID format';
+    message = "Invalid ID format";
   }
 
   const response = {
     error: message,
-    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   };
 
   res.status(statusCode).json(response);
