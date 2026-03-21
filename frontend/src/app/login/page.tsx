@@ -19,8 +19,10 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
-      router.push("/restaurants");
+      const user = await login(email, password);
+      router.push(
+        user.role === "restaurant_owner" ? "/owner/dashboard" : "/restaurants",
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed");
     } finally {

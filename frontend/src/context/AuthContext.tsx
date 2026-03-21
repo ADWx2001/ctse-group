@@ -14,14 +14,14 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   register: (
     name: string,
     email: string,
     password: string,
     phone?: string,
     role?: "customer" | "restaurant_owner",
-  ) => Promise<void>;
+  ) => Promise<User>;
   logout: () => void;
   refreshProfile: () => Promise<void>;
 }
@@ -71,9 +71,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, [logout]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User> => {
     const res = await authApi.login({ email, password });
     saveAuth(res.token, res.user);
+    return res.user;
   };
 
   const register = async (
@@ -82,9 +83,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     phone?: string,
     role?: "customer" | "restaurant_owner",
-  ) => {
+  ): Promise<User> => {
     const res = await authApi.register({ name, email, password, phone, role });
     saveAuth(res.token, res.user);
+    return res.user;
   };
 
   return (

@@ -93,11 +93,21 @@ exports.getUserOrders = async (req, res, next) => {
     const limit = Math.min(parseInt(req.query.limit) || 10, 50);
     const skip = (page - 1) * limit;
 
-    const filter = { userId: req.user.id };
+    let filter = { userId: req.user.id };
 
     // Allow admins to see all orders
     if (req.user.role === "admin" && req.query.all === "true") {
-      delete filter.userId;
+      filter = {};
+    }
+
+    // Allow restaurant owners to filter by restaurantId
+    if (req.user.role === "restaurant_owner" && req.query.restaurantId) {
+      filter = { restaurantId: req.query.restaurantId };
+    }
+
+    // Status filter (optional)
+    if (req.query.status) {
+      filter.status = req.query.status;
     }
 
     const [orders, total] = await Promise.all([
@@ -127,8 +137,12 @@ exports.getOrder = async (req, res, next) => {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    // Users can only view their own orders (admins can view any)
-    if (req.user.role !== "admin" && order.userId !== req.user.id) {
+    // Users can only view their own orders; restaurant owners can view orders at their restaurant; admins can view any
+    if (
+      req.user.role !== "admin" &&
+      order.userId !== req.user.id &&
+      req.user.role !== "restaurant_owner"
+    ) {
       return res.status(403).json({ error: "Access forbidden" });
     }
 

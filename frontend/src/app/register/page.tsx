@@ -42,14 +42,16 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await register(
+      const user = await register(
         form.name,
         form.email,
         form.password,
         form.phone || undefined,
         form.role,
       );
-      router.push("/restaurants");
+      router.push(
+        user.role === "restaurant_owner" ? "/owner/dashboard" : "/restaurants",
+      );
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Registration failed");
     } finally {

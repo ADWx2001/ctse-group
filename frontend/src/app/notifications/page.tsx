@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { useNotifications } from "@/context/NotificationContext";
 import { notificationApi, type Notification } from "@/lib/api";
 
 export default function NotificationsPage() {
   const { user, loading: authLoading } = useAuth();
+  const { refetch } = useNotifications();
   const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +35,8 @@ export default function NotificationsPage() {
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
       );
+      // Update badge count in Navbar
+      refetch();
     } catch {
       // ignore
     }

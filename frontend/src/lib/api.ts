@@ -251,6 +251,14 @@ export const orderApi = {
       pagination: { total: number; page: number; pages: number; limit: number };
     }>(`${API_URLS.order}/api/orders?page=${page}&limit=${limit}`),
 
+  listByRestaurant: (restaurantId: string, page = 1, limit = 20) =>
+    request<{
+      orders: Order[];
+      pagination: { total: number; page: number; pages: number; limit: number };
+    }>(
+      `${API_URLS.order}/api/orders?restaurantId=${restaurantId}&page=${page}&limit=${limit}`,
+    ),
+
   get: (id: string) =>
     request<{ order: Order }>(`${API_URLS.order}/api/orders/${id}`),
 
