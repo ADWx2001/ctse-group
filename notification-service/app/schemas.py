@@ -34,3 +34,14 @@ class NotificationResponse(BaseModel):
 
 class NotificationMarkRead(BaseModel):
     is_read: bool = True
+
+
+class AdminNotificationRequest(BaseModel):
+    """Sent by admin to manually create notifications."""
+    user_id: Optional[str] = None
+    user_email: Optional[str] = None
+    type: str = Field(..., description="Notification type")
+    title: str = Field(..., description="Notification title")
+    message: str = Field(..., description="Notification message")
+    send_email: bool = False
+    metadata: Optional[dict] = None

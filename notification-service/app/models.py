@@ -18,6 +18,7 @@ class Notification(Base):
     title = Column(String(200), nullable=False)
     message = Column(Text, nullable=False)
     is_read = Column(Boolean, default=False)
+    is_anouncement = Column(Boolean, default=False)
     is_email_sent = Column(Boolean, default=False)
     order_id = Column(String, nullable=True)
     metadata_json = Column(Text, nullable=True)  # Additional data as JSON
