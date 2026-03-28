@@ -201,3 +201,27 @@ async def delete_notification(
     
     logger.info(f"System notification deleted: {notification_id} by admin {payload.get('id')}")
     return None
+    
+@router.get("/all", response_model=List[NotificationResponse])
+async def get_all_notifications(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token)
+):
+    """
+    Get all notifications across all users.
+    Only users with admin or restaurant_owner role can access this endpoint.
+    """
+    # Check if user is admin or restaurant owner
+    if payload.get("role") not in ["admin", "restaurant_owner"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or restaurant owner access required")
+    
+    # Query all notifications with pagination
+    query = select(Notification).order_by(Notification.created_at.desc()).offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    notifications = result.scalars().all()
+    
+    logger.info(f"Admin {payload.get('id')} retrieved {len(notifications)} total notifications")
+    return notifications
