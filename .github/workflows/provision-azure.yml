@@ -1,0 +1,56 @@
+name: Provision Azure Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      location:
+        description: "Azure region (e.g. eastus, southeastasia)"
+        required: true
+        default: "eastus"
+      resourceGroup:
+        description: "Azure Resource Group name"
+        required: true
+        default: "rg-food-ordering"
+
+env:
+  BICEP_FILE: infrastructure/azure/main.bicep
+  PARAMS_FILE: infrastructure/azure/main.parameters.json
+
+jobs:
+  provision:
+    name: Deploy Azure Infrastructure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Create Resource Group
+        run: |
+          az group create \
+            --name ${{ github.event.inputs.resourceGroup }} \
+            --location ${{ github.event.inputs.location }}
+
+      - name: Deploy Bicep template
+        run: |
+          az deployment group create \
+            --resource-group ${{ github.event.inputs.resourceGroup }} \
+            --template-file ${{ env.BICEP_FILE }} \
+            --parameters @${{ env.PARAMS_FILE }} \
+            --parameters \
+              location=${{ github.event.inputs.location }} \
+              postgresAdminPassword=${{ secrets.POSTGRES_ADMIN_PASSWORD }} \
+              jwtSecret=${{ secrets.JWT_SECRET }} \
+              smtpUser=${{ secrets.SMTP_USER }} \
+              smtpPassword=${{ secrets.SMTP_PASSWORD }}
+
+      - name: Show deployment outputs
+        run: |
+          az deployment group show \
+            --resource-group ${{ github.event.inputs.resourceGroup }} \
+            --name main \
+            --query properties.outputs \
+            --output table
