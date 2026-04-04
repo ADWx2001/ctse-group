@@ -114,6 +114,15 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2023-05-01' = {
   }
 }
 
+// Pre-computed service FQDNs — avoids circular dependencies between Container Apps
+// Format: {appname}.{containerEnv.properties.defaultDomain}
+var envDomain = containerEnv.properties.defaultDomain
+var userServiceFqdn = 'user-service.${envDomain}'
+var restaurantServiceFqdn = 'restaurant-service.${envDomain}'
+var orderServiceFqdn = 'order-service.${envDomain}'
+var notificationServiceFqdn = 'notification-service.${envDomain}'
+var frontendFqdn = 'frontend.${envDomain}'
+
 // ---------------------------------------------------------------------------
 // Azure Cosmos DB for MongoDB (Serverless — cost-effective for assignments)
 // ---------------------------------------------------------------------------
@@ -376,7 +385,7 @@ resource restaurantServiceApp 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'PORT', value: '3002' }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
-            { name: 'USER_SERVICE_URL', value: 'https://${userServiceApp.properties.configuration.ingress.fqdn}' }
+            { name: 'USER_SERVICE_URL', value: 'https://${userServiceFqdn}' }
           ]
           probes: [
             {
@@ -442,9 +451,9 @@ resource orderServiceApp 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'MONGODB_URI', secretRef: 'mongodb-uri' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
             { name: 'JWT_EXPIRES_IN', value: '7d' }
-            { name: 'USER_SERVICE_URL', value: 'https://${userServiceApp.properties.configuration.ingress.fqdn}' }
-            { name: 'RESTAURANT_SERVICE_URL', value: 'https://${restaurantServiceApp.properties.configuration.ingress.fqdn}' }
-            { name: 'NOTIFICATION_SERVICE_URL', value: 'https://${notificationServiceApp.properties.configuration.ingress.fqdn}' }
+            { name: 'USER_SERVICE_URL', value: 'https://${userServiceFqdn}' }
+            { name: 'RESTAURANT_SERVICE_URL', value: 'https://${restaurantServiceFqdn}' }
+            { name: 'NOTIFICATION_SERVICE_URL', value: 'https://${notificationServiceFqdn}' }
           ]
           probes: [
             {
@@ -511,7 +520,7 @@ resource notificationServiceApp 'Microsoft.App/containerApps@2023-05-01' = {
             { name: 'PORT', value: '3004' }
             { name: 'DATABASE_URL', secretRef: 'database-url' }
             { name: 'JWT_SECRET', secretRef: 'jwt-secret' }
-            { name: 'ORDER_SERVICE_URL', value: 'https://${orderServiceApp.properties.configuration.ingress.fqdn}' }
+            { name: 'ORDER_SERVICE_URL', value: 'https://${orderServiceFqdn}' }
             { name: 'SMTP_HOST', value: smtpHost }
             { name: 'SMTP_PORT', value: smtpPort }
             { name: 'SMTP_USER', secretRef: 'smtp-user' }
@@ -597,11 +606,10 @@ resource frontendApp 'Microsoft.App/containerApps@2023-05-01' = {
 // Outputs
 // ---------------------------------------------------------------------------
 output acrLoginServer string = acr.properties.loginServer
-output frontendUrl string = 'https://${frontendApp.properties.configuration.ingress.fqdn}'
-output userServiceUrl string = 'https://${userServiceApp.properties.configuration.ingress.fqdn}'
-output restaurantServiceUrl string = 'https://${restaurantServiceApp.properties.configuration.ingress.fqdn}'
-output orderServiceUrl string = 'https://${orderServiceApp.properties.configuration.ingress.fqdn}'
-output notificationServiceUrl string = 'https://${notificationServiceApp.properties.configuration.ingress.fqdn}'
-output cosmosConnectionString string = cosmosConnectionString
+output frontendUrl string = 'https://${frontendFqdn}'
+output userServiceUrl string = 'https://${userServiceFqdn}'
+output restaurantServiceUrl string = 'https://${restaurantServiceFqdn}'
+output orderServiceUrl string = 'https://${orderServiceFqdn}'
+output notificationServiceUrl string = 'https://${notificationServiceFqdn}'
 output postgresServerFqdn string = pgServer.properties.fullyQualifiedDomainName
 output keyVaultName string = keyVault.name
