@@ -269,7 +269,10 @@ resource kvSecretPgPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 // ---------------------------------------------------------------------------
 // Derived connection strings for use in Container Apps
 // ---------------------------------------------------------------------------
-var cosmosConnectionString = mongodbUri != '' ? mongodbUri : cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString
+var cosmosBaseUri = mongodbUri != '' ? mongodbUri : cosmosAccount.listConnectionStrings().connectionStrings[0].connectionString
+// Cosmos DB connection string format: mongodb://host:port/?ssl=true&... — insert dbName before '?'
+var cosmosUserDbUri = replace(cosmosBaseUri, '/?', '/foodorder_users?')
+var cosmosOrderDbUri = replace(cosmosBaseUri, '/?', '/foodorder_orders?')
 var pgConnectionBase = 'postgresql+asyncpg://${postgresAdminUser}:${postgresAdminPassword}@${pgServer.properties.fullyQualifiedDomainName}:5432'
 var pgRestaurantUrl = '${pgConnectionBase}/${pgDatabaseRestaurant}?ssl=require'
 var pgNotificationUrl = '${pgConnectionBase}/${pgDatabaseNotification}?ssl=require'
@@ -302,7 +305,7 @@ resource userServiceApp 'Microsoft.App/containerApps@2023-05-01' = {
       ]
       secrets: [
         { name: 'acr-password', value: acr.listCredentials().passwords[0].value }
-        { name: 'mongodb-uri', value: '${cosmosConnectionString}/foodorder_users' }
+        { name: 'mongodb-uri', value: cosmosUserDbUri }
         { name: 'jwt-secret', value: jwtSecret }
       ]
     }
@@ -432,7 +435,7 @@ resource orderServiceApp 'Microsoft.App/containerApps@2023-05-01' = {
       ]
       secrets: [
         { name: 'acr-password', value: acr.listCredentials().passwords[0].value }
-        { name: 'mongodb-uri', value: '${cosmosConnectionString}/foodorder_orders' }
+        { name: 'mongodb-uri', value: cosmosOrderDbUri }
         { name: 'jwt-secret', value: jwtSecret }
       ]
     }
