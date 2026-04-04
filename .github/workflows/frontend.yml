@@ -2,12 +2,12 @@ name: Frontend CI/CD
 
 on:
   push:
-    branches: [main]
+    branches: [master, main]
     paths:
       - "frontend/**"
       - ".github/workflows/frontend.yml"
   pull_request:
-    branches: [main]
+    branches: [master, main]
     paths:
       - "frontend/**"
 
@@ -19,7 +19,7 @@ jobs:
   build-and-push:
     name: Build & Push to ACR
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
@@ -48,7 +48,7 @@ jobs:
     name: Deploy to Azure Container Apps
     runs-on: ubuntu-latest
     needs: build-and-push
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master') && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
 
