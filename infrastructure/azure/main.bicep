@@ -132,6 +132,9 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2023-11-15' = {
   kind: 'MongoDB'
   properties: {
     databaseAccountOfferType: 'Standard'
+    apiProperties: {
+      serverVersion: '4.0'
+    }
     capabilities: [
       { name: 'EnableMongo' }
       { name: 'EnableServerless' }
@@ -273,7 +276,7 @@ var cosmosBaseUri = mongodbUri != '' ? mongodbUri : cosmosAccount.listConnection
 // Cosmos DB connection string format: mongodb://host:port/?ssl=true&... — insert dbName before '?'
 var cosmosUserDbUri = replace(cosmosBaseUri, '/?', '/foodorder_users?')
 var cosmosOrderDbUri = replace(cosmosBaseUri, '/?', '/foodorder_orders?')
-var pgConnectionBase = 'postgresql+asyncpg://${postgresAdminUser}:${postgresAdminPassword}@${pgServer.properties.fullyQualifiedDomainName}:5432'
+var pgConnectionBase = 'postgresql+asyncpg://${postgresAdminUser}:${uriComponent(postgresAdminPassword)}@${pgServer.properties.fullyQualifiedDomainName}:5432'
 var pgRestaurantUrl = '${pgConnectionBase}/${pgDatabaseRestaurant}?ssl=require'
 var pgNotificationUrl = '${pgConnectionBase}/${pgDatabaseNotification}?ssl=require'
 
