@@ -52,7 +52,7 @@ var appInsightsName = '${projectName}-insights'
 var envName = '${projectName}-env'
 var cosmosName = '${projectName}-cosmos-${uniqueSuffix}'
 var pgServerName = '${projectName}-pg-${uniqueSuffix}'
-var kvName = '${projectName}-kv-${uniqueSuffix}'
+var kvName = '${projectName}-kv-${take(uniqueSuffix, 8)}'
 var pgDatabaseRestaurant = 'restaurant_db'
 var pgDatabaseNotification = 'notification_db'
 
@@ -502,8 +502,8 @@ resource notificationServiceApp 'Microsoft.App/containerApps@2023-05-01' = {
         { name: 'acr-password', value: acr.listCredentials().passwords[0].value }
         { name: 'database-url', value: pgNotificationUrl }
         { name: 'jwt-secret', value: jwtSecret }
-        { name: 'smtp-user', value: smtpUser }
-        { name: 'smtp-password', value: smtpPassword }
+        { name: 'smtp-user', value: empty(smtpUser) ? 'placeholder' : smtpUser }
+        { name: 'smtp-password', value: empty(smtpPassword) ? 'placeholder' : smtpPassword }
       ]
     }
     template: {
