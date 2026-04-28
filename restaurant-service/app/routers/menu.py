@@ -26,6 +26,14 @@ async def get_menu(restaurant_id: str, db: AsyncSession = Depends(get_db)):
     )
     return result.scalars().all()
 
+@router.get("/restaurant/new/{restaurant_id}", response_model=List[MenuItemResponse])
+async def get_menu(restaurant_id: str, db: AsyncSession = Depends(get_db)):
+    """Get all available menu items for a restaurant (public endpoint)."""
+    result = await db.execute(
+        select(MenuItem)
+        .where(MenuItem.restaurant_id == restaurant_id, MenuItem.is_available == True)
+    )
+    return result.scalars().all()
 
 @router.get("/{item_id}", response_model=MenuItemResponse)
 async def get_menu_item(item_id: str, db: AsyncSession = Depends(get_db)):
