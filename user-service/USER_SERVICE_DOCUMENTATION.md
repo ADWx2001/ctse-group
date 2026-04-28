@@ -527,3 +527,24 @@ Workflow file: `.github/workflows/user-service.yml`
 - `openapi.yaml` — API spec
 - `sonar-project.properties` — Sonar analysis config
 - `.github/workflows/user-service.yml` — CI/CD pipeline
+
+---
+
+## 3. Integrations and Connected Features
+
+- **Frontend**: Connects to user-service for registration, login, and profile management via REST API.
+- **Order-service & Restaurant-service**: Rely on user-service for JWT validation and user identity. They call `/api/auth/validate` to verify tokens.
+- **Notification-service**: Not directly connected to user-service. It receives events from order-service, not from user-service.
+- **Logging & Monitoring**: Managed at the infrastructure/container level (e.g., AWS ECS logs, Azure logs), not directly in user-service code.
+- **Security**: Enforced via JWT, password/mobile validation, rate limiting, SonarQube, and Snyk.
+
+> **Note:** user-service does not directly connect to notification-service, logging, monitoring, or external APIs. Its main role is to provide authentication and user data to other services.
+
+---
+
+## 4. Code Quality & Security Tools
+
+- **SonarQube**: Configured via `sonar-project.properties` in the user-service directory. SonarQube is run in the CI/CD pipeline to analyze code quality, detect bugs, code smells, and security vulnerabilities after each push or pull request.
+- **Snyk**: (Recommended) Integrated in the CI/CD pipeline to scan dependencies for known vulnerabilities. Run with commands like `snyk test` or `snyk monitor` during automated builds.
+
+Both tools are most effective when run automatically in your CI/CD workflow, ensuring every code change and dependency update is checked for quality and security before deployment.
