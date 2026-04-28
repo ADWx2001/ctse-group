@@ -249,3 +249,5 @@ az webapp deployment list-publishing-profiles --name food-ordering-restaurant-sv
 az webapp deployment list-publishing-profiles --name food-ordering-notification-svc --resource-group rg-food-ordering --xml
 
 az webapp deployment list-publishing-profiles --name food-ordering-frontend-svc --resource-group rg-food-ordering --xml -->
+
+psql "host=foodorder-pg-pacq3opfig4ya.postgres.database.azure.com port=5432 dbname=restaurant_db user=pgadmin sslmode=require"

@@ -111,7 +111,8 @@ services:
     environment:
       - ENVIRONMENT=development
       - PORT=3004
-      - DATABASE_URL=sqlite+aiosqlite:///./notifications.db
+      - DATABASE_URL=mongodb://mongo:27017
+      - MONGODB_DB_NAME=notifications_db
       - JWT_SECRET=super-secret-jwt-key-change-in-production
       - ORDER_SERVICE_URL=http://order-service:3003
       - SMTP_HOST=smtp.gmail.com
