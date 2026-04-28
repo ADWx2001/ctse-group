@@ -50,6 +50,13 @@ async def health_check():
         "service": "restaurant-service",
     }
 
+@app.get("/health/app", tags=["Health"])
+async def health_check():
+    return {
+        "status": "healthy",
+        "service": "restaurant-service",
+    }
+
 
 os.makedirs("static/menu-images", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
