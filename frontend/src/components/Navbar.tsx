@@ -28,7 +28,7 @@ export default function Navbar() {
               🍔
             </span>
             <span>
-              Food<span className="text-[#06C167]">Order test</span>
+              Food<span className="text-[#06C167]">Order</span>
               {isOwner && (
                 <span className="ml-2 text-xs font-normal text-[#06C167] border border-[#06C167] rounded-full px-2 py-0.5">
                   Owner

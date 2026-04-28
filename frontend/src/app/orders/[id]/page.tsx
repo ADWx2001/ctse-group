@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { orderApi, type Order, ApiError } from "@/lib/api";
@@ -35,7 +35,6 @@ const STATUS_ICONS: Record<string, string> = {
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -43,17 +42,14 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      router.push("/login");
-      return;
-    }
     if (!id) return;
+    setLoading(true);
     orderApi
       .get(id)
       .then((res) => setOrder(res.order))
       .catch(() => setError("Failed to load order"))
       .finally(() => setLoading(false));
-  }, [id, user, authLoading, router]);
+  }, [id, authLoading]);
 
   const handleCancel = async () => {
     if (!order) return;
