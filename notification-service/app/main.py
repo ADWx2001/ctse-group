@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 
-from app.database import init_db
+from app.database import init_db, close_db
 from app.routers import notifications
 
 logging.basicConfig(level=logging.INFO)
@@ -15,9 +15,11 @@ async def lifespan(app: FastAPI):
     """Initialize database on startup."""
     logger.info("[Notification Service] Starting up...")
     await init_db()
-    logger.info("[Notification Service] Database initialized.")
+    logger.info("[Notification Service] MongoDB initialized.")
     yield
-    logger.info("[Notification Service] Shutting down.")
+    logger.info("[Notification Service] Shutting down...")
+    await close_db()
+    logger.info("[Notification Service] MongoDB connection closed.")
 
 
 app = FastAPI(
