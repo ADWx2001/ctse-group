@@ -46,12 +46,29 @@ export default function NotificationsPage() {
       return;
     }
     setLoading(true);
-    notificationApi
-      .list(user._id, filter === "unread")
-      .then(setNotifications)
-      .catch(() => setNotifications([]))
-      .finally(() => setLoading(false));
-  }, [user, authLoading, filter, router]);
+    
+    // For admin and restaurant owners, fetch all notifications
+    // For regular users, fetch only their notifications
+    const fetchNotifications = async () => {
+      try {
+        if (isAdmin || isOwner) {
+          // Fetch all notifications for admin/restaurant owners
+          const allNotifications = await notificationApi.list("admin", filter === "unread");
+          setNotifications(allNotifications);
+        } else {
+          // Fetch user-specific notifications for regular users
+          const userNotifications = await notificationApi.list(user._id, filter === "unread");
+          setNotifications(userNotifications);
+        }
+      } catch (error) {
+        setNotifications([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchNotifications();
+  }, [user, authLoading, filter, router, isAdmin, isOwner]);
 
   const markAsRead = async (id: string) => {
     try {
@@ -196,7 +213,7 @@ export default function NotificationsPage() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">
           {notifications.map((notif) => (
             <div
               key={notif.id}

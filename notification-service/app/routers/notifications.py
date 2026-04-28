@@ -85,17 +85,24 @@ async def get_user_notifications(
     payload: dict = Depends(verify_token)
 ):
     """Get all notifications for a user. Users can only view their own notifications."""
-    # Users can only see their own; admin can see any
-    if payload.get("role") != "admin" and payload["id"] != user_id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    # Check authorization
+    if payload.get("role") not in ["admin", "restaurant_owner"]:
+        # Regular users can only see their own notifications
+        if payload["id"] != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
     # Build query for notifications
-    query = {
-        "$or": [
-            {"user_id": user_id},
-            {"user_id": "system"}
-        ]
-    }
+    if user_id == "admin" and payload.get("role") in ["admin", "restaurant_owner"]:
+        # For admin/restaurant owners requesting all notifications
+        query = {}  # Get all notifications
+    else:
+        # For regular users or specific user requests
+        query = {
+            "$or": [
+                {"user_id": user_id},
+                {"user_id": "system"}
+            ]
+        }
     
     if unread_only:
         query["is_read"] = False
@@ -112,7 +119,7 @@ async def get_user_notifications(
         notifications.append(NotificationResponse(**doc))
     
     # Debug logging
-    logger.info(f"Retrieved {len(notifications)} notifications for user {user_id}")
+    logger.info(f"Retrieved {len(notifications)} notifications for user {user_id} (role: {payload.get('role')})")
     for notif in notifications[:3]:  # Log first 3 notifications
         logger.info(f"  - ID: {notif.id}, user_id: {notif.user_id}, title: {notif.title}")
     
