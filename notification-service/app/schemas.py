@@ -18,7 +18,7 @@ class NotificationSendRequest(BaseModel):
 
 
 class NotificationResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    """Response model for notifications."""
 
     id: str
     user_id: str
@@ -28,7 +28,9 @@ class NotificationResponse(BaseModel):
     message: str
     is_read: bool
     is_email_sent: bool
+    is_anouncement: bool = False
     order_id: Optional[str] = None
+    metadata: Optional[dict] = None
     created_at: Optional[datetime] = None
 
 
