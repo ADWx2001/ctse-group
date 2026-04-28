@@ -14,16 +14,9 @@ const { errorHandler, notFound } = require("./middleware/errorHandler");
 const app = express();
 
 // Security middleware
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(",")
-      : "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.options("*", cors());
+app.use(cors());
 
 // Rate limiting — stricter on auth routes
 const authLimiter = rateLimit({

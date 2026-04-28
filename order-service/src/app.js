@@ -12,16 +12,9 @@ const { errorHandler, notFound } = require("./middleware/errorHandler");
 
 const app = express();
 
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.ALLOWED_ORIGINS
-      ? process.env.ALLOWED_ORIGINS.split(",")
-      : "*",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  }),
-);
+app.use(helmet({ crossOriginResourcePolicy: false }));
+app.options("*", cors());
+app.use(cors());
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

@@ -189,6 +189,53 @@ export const restaurantApi = {
       `${API_URLS.restaurant}/api/menu/restaurant/${restaurantId}`,
       { method: "POST", body: JSON.stringify(data) },
     ),
+
+  update: (
+    id: string,
+    data: Partial<Omit<Restaurant, "id" | "owner_id" | "rating" | "created_at" | "updated_at">>,
+  ) =>
+    request<Restaurant>(`${API_URLS.restaurant}/api/restaurants/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  delete: (id: string) =>
+    request<void>(`${API_URLS.restaurant}/api/restaurants/${id}`, {
+      method: "DELETE",
+    }),
+
+  updateMenuItem: (
+    itemId: string,
+    data: Partial<Omit<MenuItem, "id" | "restaurant_id" | "created_at" | "updated_at">>,
+  ) =>
+    request<MenuItem>(`${API_URLS.restaurant}/api/menu/${itemId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  deleteMenuItem: (itemId: string) =>
+    request<void>(`${API_URLS.restaurant}/api/menu/${itemId}`, {
+      method: "DELETE",
+    }),
+
+  uploadMenuItemImage: async (itemId: string, file: File): Promise<MenuItem> => {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(
+      `${API_URLS.restaurant}/api/menu/${itemId}/image`,
+      {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new ApiError(body.error || body.detail || res.statusText, res.status);
+    }
+    return res.json();
+  },
 };
 
 // ─── Orders ────────────────────────────────────────────────────────────
