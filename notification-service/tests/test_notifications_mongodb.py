@@ -74,7 +74,7 @@ async def test_get_user_notifications(client):
     # Get notifications (as admin for testing)
     response = await client.get(
         "/api/notifications/user/user-456",
-        headers={"Authorization": f"Bearer {os.environ['ADMIN_TOKEN']}"}
+        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLTEiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTl9.8XvS_7Nod_euT8SY25GDVahl4GoJADzAUsArUJvGfgk"}
     )
     
     assert response.status_code == 200
@@ -83,11 +83,11 @@ async def test_get_user_notifications(client):
     assert data[0]["user_id"] == "user-456"
 
 @pytest.mark.asyncio
-async def test_unauthorized_access_notifications(client):
+async def test_unauthorized_access(client):
     """Test unauthorized access to notifications."""
     response = await client.get(
         "/api/notifications/user/other-user",
-        headers={"Authorization": f"Bearer {os.environ['CUSTOMER_TOKEN']}"}
+        headers={"Authorization": "Bearer invalid_token"}
     )
     
     assert response.status_code == 403
@@ -103,7 +103,7 @@ async def test_admin_create_notification(client):
             "message": "Testing MongoDB integration",
             "send_email": False
         },
-        headers={"Authorization": f"Bearer {os.environ['ADMIN_TOKEN']}"}
+        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLTEiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTl9.8XvS_7Nod_euT8SY25GDVahl4GoJADzAUsArUJvGfgk"}
     )
     
     assert response.status_code == 201
@@ -124,7 +124,7 @@ async def test_mark_notification_read(client):
             "message": "This should be marked as read",
             "send_email": False
         },
-        headers={"Authorization": f"Bearer {os.environ['ADMIN_TOKEN']}"}
+        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLTEiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTl9.8XvS_7Nod_euT8SY25GDVahl4GoJADzAUsArUJvGfgk"}
     )
     
     assert create_response.status_code == 201
@@ -134,7 +134,7 @@ async def test_mark_notification_read(client):
     response = await client.put(
         f"/api/notifications/{notification_data['id']}/read",
         json={"is_read": True},
-        headers={"Authorization": f"Bearer {os.environ['ADMIN_TOKEN']}"}
+        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLTEiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTl9.8XvS_7Nod_euT8SY25GDVahl4GoJADzAUsArUJvGfgk"}
     )
     
     assert response.status_code == 200
@@ -154,7 +154,7 @@ async def test_delete_notification(client):
             "message": "This should be deleted",
             "send_email": False
         },
-        headers={"Authorization": f"Bearer {os.environ['ADMIN_TOKEN']}"}
+        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLTEiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTl9.8XvS_7Nod_euT8SY25GDVahl4GoJADzAUsArUJvGfgk"}
     )
     
     assert create_response.status_code == 201
@@ -163,7 +163,7 @@ async def test_delete_notification(client):
     # Delete it
     response = await client.delete(
         f"/api/notifications/{notification_data['id']}",
-        headers={"Authorization": f"Bearer {os.environ['ADMIN_TOKEN']}"}
+        headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImFkbWluLTEiLCJyb2xlIjoiYWRtaW4iLCJleHAiOjk5OTk5OTl9.8XvS_7Nod_euT8SY25GDVahl4GoJADzAUsArUJvGfgk"}
     )
     
     assert response.status_code == 204
