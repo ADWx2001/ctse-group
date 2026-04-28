@@ -205,18 +205,18 @@ export default function OrderDetailPage() {
                 <div>
                   <p className="font-medium text-sm">{item.name}</p>
                   <p className="text-gray-500 text-xs">
-                    {item.quantity} × ${item.price.toFixed(2)}
+                    {item.quantity} × RS {item.price.toFixed(2)}
                   </p>
                 </div>
                 <p className="font-medium text-sm">
-                  ${item.subtotal.toFixed(2)}
+                  RS {item.subtotal.toFixed(2)}
                 </p>
               </div>
             ))}
             <div className="flex justify-between items-center pt-3 border-t-2 border-gray-200">
               <p className="font-bold">Total</p>
               <p className="font-bold text-lg">
-                ${order.totalAmount.toFixed(2)}
+                RS {order.totalAmount.toFixed(2)}
               </p>
             </div>
           </div>

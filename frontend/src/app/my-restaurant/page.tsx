@@ -278,7 +278,7 @@ export default function MyRestaurantPage() {
                           </p>
                           <div className="flex items-center justify-between mt-1">
                             <span className="font-bold text-sm">
-                              ${item.price.toFixed(2)}
+                              RS {item.price.toFixed(2)}
                             </span>
                             <span
                               className={`text-xs px-2 py-0.5 rounded-full ${item.is_available ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
