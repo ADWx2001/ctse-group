@@ -229,3 +229,22 @@ See individual service READMEs for service-specific challenges.
 | Student 2 | Restaurant Service   | Menu & Catalog      |
 | Student 3 | Order Service        | Order Orchestration |
 | Student 4 | Notification Service | Alerts & Comms      |
+
+The Azure for Students subscription has a restriction — SLIIT controls the Azure AD tenant and students don't have permission to create app registrations (service principals). This is a common limitation.
+
+Service URL
+User https://food-ordering-user-svc.azurewebsites.net
+Order https://food-ordering-order-svc.azurewebsites.net
+Restaurant https://food-ordering-restaurant-svc.azurewebsites.net
+Notification https://food-ordering-notification-svc.azurewebsites.net
+Frontend https://food-ordering-frontend-svc.azurewebsites.net
+
+az webapp deployment list-publishing-profiles --name food-ordering-user-svc --resource-group rg-food-ordering --xml
+
+az webapp deployment list-publishing-profiles --name food-ordering-order-svc --resource-group rg-food-ordering --xml
+
+az webapp deployment list-publishing-profiles --name food-ordering-restaurant-svc --resource-group rg-food-ordering --xml
+
+az webapp deployment list-publishing-profiles --name food-ordering-notification-svc --resource-group rg-food-ordering --xml
+
+az webapp deployment list-publishing-profiles --name food-ordering-frontend-svc --resource-group rg-food-ordering --xml
