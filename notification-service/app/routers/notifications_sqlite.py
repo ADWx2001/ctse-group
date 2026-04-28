@@ -1,30 +1,28 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from motor.motor_asyncio import AsyncIOMotorDatabase
-from typing import List, Optional
-import logging
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from typing import List
 import json
+import logging
 
 from app.database import get_db
-from app.models import NotificationModel
-from app.schemas import (
-    NotificationSendRequest,
-    NotificationResponse,
-    NotificationMarkRead,
-    AdminNotificationRequest,
-)
+from app.models import Notification
+from app.schemas import NotificationSendRequest, NotificationResponse, NotificationMarkRead, AdminNotificationRequest
 from app.security import verify_token
-from app.services.email_service import send_email, build_order_confirmation_email, build_status_update_email
+from app.services.email_service import (
+    send_email,
+    build_order_confirmation_email,
+    build_status_update_email
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-security = HTTPBearer()
 
 
 @router.post("/send", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED)
 async def send_notification(
     data: NotificationSendRequest,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Receive a notification event from the Order Service and:
@@ -56,8 +54,8 @@ async def send_notification(
     if data.userEmail:
         email_sent = await send_email(data.userEmail, subject, body_html)
 
-    # Store notification in MongoDB
-    notification = NotificationModel.create_new(
+    # Store notification
+    notification = Notification(
         user_id=data.userId,
         user_email=data.userEmail,
         type=data.type,
@@ -65,23 +63,21 @@ async def send_notification(
         message=message,
         is_email_sent=email_sent,
         order_id=data.orderId,
-        metadata=data.model_dump()
+        metadata_json=json.dumps(data.model_dump(), default=str)
     )
+    db.add(notification)
+    await db.commit()
+    await db.refresh(notification)
 
-    # Insert into MongoDB
-    result = await db.notifications.insert_one(notification.to_dict())
-    
     logger.info(f"Notification stored: {notification.id} (email_sent={email_sent})")
-    
-    # Return the notification with ID
-    return NotificationResponse(**notification.model_dump())
+    return notification
 
 
 @router.get("/user/{user_id}", response_model=List[NotificationResponse])
 async def get_user_notifications(
     user_id: str,
     unread_only: bool = False,
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token)
 ):
     """Get all notifications for a user. Users can only view their own notifications."""
@@ -89,31 +85,21 @@ async def get_user_notifications(
     if payload.get("role") != "admin" and payload["id"] != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-    # Build query for notifications
-    query = {
-        "$or": [
-            {"user_id": user_id},
-            {"user_id": "system"}
-        ]
-    }
+    # All users (including normal users) see both their own notifications and system announcements
+    query = select(Notification).where(
+        (Notification.user_id == user_id) | (Notification.user_id == "system")
+    )
     
     if unread_only:
-        query["is_read"] = False
+        query = query.where(Notification.is_read == False)
+    query = query.order_by(Notification.created_at.desc())
 
-    # Execute query with sorting
-    cursor = db.notifications.find(query).sort("created_at", -1)
-    notifications = []
-    
-    async for doc in cursor:
-        # Convert ObjectId to string and handle datetime
-        doc["id"] = str(doc.get("id", ""))
-        if "_id" in doc:
-            doc.pop("_id")
-        notifications.append(NotificationResponse(**doc))
+    result = await db.execute(query)
+    notifications = result.scalars().all()
     
     # Debug logging
     logger.info(f"Retrieved {len(notifications)} notifications for user {user_id}")
-    for notif in notifications[:3]:  # Log first 3 notifications
+    for notif in notifications:
         logger.info(f"  - ID: {notif.id}, user_id: {notif.user_id}, title: {notif.title}")
     
     return notifications
@@ -123,40 +109,32 @@ async def get_user_notifications(
 async def mark_notification_read(
     notification_id: str,
     data: NotificationMarkRead,
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token)
 ):
     """Mark a notification as read."""
-    # Find the notification
-    notification_doc = await db.notifications.find_one({"id": notification_id})
-    
-    if not notification_doc:
+    result = await db.execute(
+        select(Notification).where(Notification.id == notification_id)
+    )
+    notification = result.scalar_one_or_none()
+
+    if not notification:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
 
     # Users can mark their own notifications as read, and any user can mark system notifications as read
-    if payload.get("role") != "admin" and payload["id"] != notification_doc.get("user_id") and notification_doc.get("user_id") != "system":
+    if payload.get("role") != "admin" and payload["id"] != notification.user_id and notification.user_id != "system":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-    # Update notification
-    update_result = await db.notifications.update_one(
-        {"id": notification_id},
-        {"$set": {"is_read": data.is_read}}
-    )
-    
-    if update_result.modified_count == 0:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
-
-    # Get updated notification
-    updated_doc = await db.notifications.find_one({"id": notification_id})
-    updated_doc.pop("_id")  # Remove MongoDB ObjectId
-    
-    return NotificationResponse(**updated_doc)
+    notification.is_read = data.is_read
+    await db.commit()
+    await db.refresh(notification)
+    return notification
 
 
 @router.post("/admin/send", response_model=NotificationResponse, status_code=status.HTTP_201_CREATED)
 async def admin_send_notification(
     data: AdminNotificationRequest,
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token)
 ):
     """
@@ -174,8 +152,8 @@ async def admin_send_notification(
         body_html = f"<p>{data.message}</p>"
         email_sent = await send_email(data.user_email, subject, body_html)
 
-    # Store notification in MongoDB
-    notification = NotificationModel.create_new(
+    # Store notification
+    notification = Notification(
         user_id=data.user_id if data.user_id else "system",
         user_email=data.user_email if data.user_email else None,
         type=data.type,
@@ -183,22 +161,20 @@ async def admin_send_notification(
         message=data.message,
         is_email_sent=email_sent,
         is_anouncement=True,
-        metadata=data.metadata
+        metadata_json=json.dumps(data.metadata, default=str) if data.metadata else None
     )
+    db.add(notification)
+    await db.commit()
+    await db.refresh(notification)
 
-    # Insert into MongoDB
-    result = await db.notifications.insert_one(notification.to_dict())
-    
     logger.info(f"Admin notification created: {notification.id} by admin {payload.get('id')} (email_sent={email_sent})")
-    
-    # Return the notification
-    return NotificationResponse(**notification.model_dump())
+    return notification
 
 
 @router.delete("/{notification_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_notification(
     notification_id: str,
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     payload: dict = Depends(verify_token)
 ):
     """Delete a notification. Only admin or restaurant owner can delete system notifications."""
@@ -207,20 +183,45 @@ async def delete_notification(
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or restaurant owner access required")
     
     # Find the notification
-    notification_doc = await db.notifications.find_one({"id": notification_id})
+    result = await db.execute(
+        select(Notification).where(Notification.id == notification_id)
+    )
+    notification = result.scalar_one_or_none()
     
-    if not notification_doc:
+    if not notification:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
     
     # Only allow deletion of system notifications (manually added)
-    if notification_doc.get("user_id") != "system":
+    if notification.user_id != "system":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Can only delete system notifications")
     
     # Delete the notification
-    delete_result = await db.notifications.delete_one({"id": notification_id})
-    
-    if delete_result.deleted_count == 0:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Notification not found")
+    await db.delete(notification)
+    await db.commit()
     
     logger.info(f"System notification deleted: {notification_id} by admin {payload.get('id')}")
     return None
+    
+@router.get("/all", response_model=List[NotificationResponse])
+async def get_all_notifications(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db),
+    payload: dict = Depends(verify_token)
+):
+    """
+    Get all notifications across all users.
+    Only users with admin or restaurant_owner role can access this endpoint.
+    """
+    # Check if user is admin or restaurant owner
+    if payload.get("role") not in ["admin", "restaurant_owner"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin or restaurant owner access required")
+    
+    # Query all notifications with pagination
+    query = select(Notification).order_by(Notification.created_at.desc()).offset(skip).limit(limit)
+    
+    result = await db.execute(query)
+    notifications = result.scalars().all()
+    
+    logger.info(f"Admin {payload.get('id')} retrieved {len(notifications)} total notifications")
+    return notifications

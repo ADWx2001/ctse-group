@@ -12,6 +12,9 @@ export default function Navbar() {
   const { unreadCount } = useNotifications();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Log user role for debugging
+  console.log("Logged in user role:", user?.role);
+
   const isOwner = user?.role === "restaurant_owner";
   const isAdmin = user?.role === "admin";
 
