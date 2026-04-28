@@ -108,6 +108,35 @@ export default function MyRestaurantPage() {
   // ── Create restaurant ──────────────────────────────────────────────────
   const handleCreateRestaurant = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    
+    // Validation
+    if (restForm.name.length < 2) {
+      setError("Restaurant name must be at least 2 characters long");
+      return;
+    }
+    if (restForm.name.length > 200) {
+      setError("Restaurant name must be less than 200 characters long");
+      return;
+    }
+    if (restForm.address.length < 5) {
+      setError("Address must be at least 5 characters long");
+      return;
+    }
+    if (restForm.address.length > 500) {
+      setError("Address must be less than 500 characters long");
+      return;
+    }
+    if (restForm.city.length < 2) {
+      setError("City must be at least 2 characters long");
+      return;
+    }
+    if (restForm.city.length > 100) {
+      setError("City must be less than 100 characters long");
+      return;
+    }
+    
+    setSaving(true);
     setError(""); setSaving(true);
     try {
       const opening = restForm.openTime
@@ -119,6 +148,8 @@ export default function MyRestaurantPage() {
         address: restForm.address,
         city: restForm.city,
         phone: restForm.phone || undefined,
+        email: undefined, // Add email field as undefined
+        image_url: undefined, // Add image_url field as undefined
         cuisine_type: restForm.cuisine_type || undefined,
         opening_hours: opening || undefined,
       } as Parameters<typeof restaurantApi.create>[0]);

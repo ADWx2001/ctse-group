@@ -117,8 +117,8 @@ services:
       - ORDER_SERVICE_URL=http://order-service:3003
       - SMTP_HOST=smtp.gmail.com
       - SMTP_PORT=587
-      - SMTP_USER=your-email@gmail.com
-      - SMTP_PASSWORD=your-app-password
+      - SMTP_USER=anushkasiyambalapitiya.edu01@gmail.com
+      - SMTP_PASSWORD=mspe ugfz zohz llsm
       - FROM_EMAIL=noreply@foodordering.com
     depends_on:
       order-service:
