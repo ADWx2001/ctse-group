@@ -51,6 +51,7 @@ async def health_check():
     }
 
 
+os.makedirs("static/menu-images", exist_ok=True)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(restaurants.router, prefix="/api/restaurants", tags=["Restaurants"])
 app.include_router(menu.router, prefix="/api/menu", tags=["Menu"])
