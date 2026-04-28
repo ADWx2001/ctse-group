@@ -60,7 +60,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: --severity-threshold=high
-          command: test
+          command: test 
 
   sonarcloud:
     name: SonarCloud Analysis
