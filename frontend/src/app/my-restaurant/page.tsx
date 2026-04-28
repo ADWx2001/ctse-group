@@ -43,7 +43,8 @@ export default function MyRestaurantPage() {
     city: "",
     phone: "",
     cuisine_type: "",
-    opening_hours: "",
+    openTime: "",
+    closeTime: "",
   });
 
   // Add menu item form
@@ -104,6 +105,10 @@ export default function MyRestaurantPage() {
     setError("");
     setSaving(true);
     try {
+      const opening = restForm.openTime
+        ? `${restForm.openTime}-${restForm.closeTime || ""}`
+        : undefined;
+
       const created = await restaurantApi.create({
         name: restForm.name,
         description: restForm.description || undefined,
@@ -111,7 +116,7 @@ export default function MyRestaurantPage() {
         city: restForm.city,
         phone: restForm.phone || undefined,
         cuisine_type: restForm.cuisine_type || undefined,
-        opening_hours: restForm.opening_hours || undefined,
+        opening_hours: opening || undefined,
       } as Parameters<typeof restaurantApi.create>[0]);
       setRestaurants((prev) => [...prev, created]);
       selectRestaurant(created);
@@ -123,7 +128,8 @@ export default function MyRestaurantPage() {
         city: "",
         phone: "",
         cuisine_type: "",
-        opening_hours: "",
+        openTime: "",
+        closeTime: "",
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to create");
@@ -410,18 +416,26 @@ export default function MyRestaurantPage() {
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
                 />
-                <input
-                  type="text"
-                  placeholder="Opening hours"
-                  value={restForm.opening_hours}
-                  onChange={(e) =>
-                    setRestForm((f) => ({
-                      ...f,
-                      opening_hours: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    placeholder="Open time"
+                    value={restForm.openTime}
+                    onChange={(e) =>
+                      setRestForm((f) => ({ ...f, openTime: e.target.value }))
+                    }
+                    className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
+                  />
+                  <input
+                    type="time"
+                    placeholder="Close time"
+                    value={restForm.closeTime}
+                    onChange={(e) =>
+                      setRestForm((f) => ({ ...f, closeTime: e.target.value }))
+                    }
+                    className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
+                  />
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button
