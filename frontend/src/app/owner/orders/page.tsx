@@ -353,7 +353,7 @@ export default function OwnerOrdersPage() {
                                 {item.quantity}× {item.name}
                               </span>
                               <span className="text-gray-500">
-                                ${item.subtotal.toFixed(2)}
+                                RS {item.subtotal.toFixed(2)}
                               </span>
                             </div>
                           ))}
@@ -371,7 +371,7 @@ export default function OwnerOrdersPage() {
                           {new Date(order.createdAt).toLocaleString()}
                         </p>
                         <p className="font-bold text-base">
-                          ${order.totalAmount.toFixed(2)}
+                          RS {order.totalAmount.toFixed(2)}
                         </p>
                       </div>
                     </div>

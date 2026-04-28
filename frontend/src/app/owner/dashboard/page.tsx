@@ -166,7 +166,7 @@ export default function OwnerDashboardPage() {
             <StatCard
               emoji="💰"
               label="Today's Revenue"
-              value={`$${stats.revenueToday.toFixed(2)}`}
+              value={`RS ${stats.revenueToday.toFixed(2)}`}
               sub={`${stats.totalOrdersToday} order${stats.totalOrdersToday !== 1 ? "s" : ""}`}
               color="bg-blue-600 text-white"
             />
@@ -322,7 +322,7 @@ export default function OwnerDashboardPage() {
                           </p>
                         </div>
                         <p className="font-bold text-sm flex-shrink-0">
-                          ${order.totalAmount.toFixed(2)}
+                          RS {order.totalAmount.toFixed(2)}
                         </p>
                       </Link>
                     ))}
