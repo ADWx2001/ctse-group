@@ -11,8 +11,10 @@ const registerSchema = Joi.object({
       /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
       "password must contain uppercase, lowercase and a number",
     ),
+  // Sri Lankan mobile: +94XXXXXXXXX or 0XXXXXXXXX
   phone: Joi.string()
-    .pattern(/^\+?[1-9]\d{1,14}$/)
+    .pattern(/^(\+94|0)7\d{8}$/)
+    .message('Phone number must be a valid Sri Lankan mobile (e.g., +94771234567 or 0771234567)')
     .optional(),
   role: Joi.string().valid("customer", "restaurant_owner").default("customer"),
 });

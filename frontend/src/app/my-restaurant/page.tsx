@@ -10,6 +10,20 @@ import {
   ApiError,
 } from "@/lib/api";
 
+const CUISINE_OPTIONS = [
+  "Sri Lankan",
+  "Indian",
+  "Chinese",
+  "Italian",
+  "Japanese",
+  "Thai",
+  "Fast Food",
+  "Desserts",
+  "Mexican",
+  "Mediterranean",
+  "Beverages",
+];
+
 export default function MyRestaurantPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -29,7 +43,8 @@ export default function MyRestaurantPage() {
     city: "",
     phone: "",
     cuisine_type: "",
-    opening_hours: "",
+    openTime: "",
+    closeTime: "",
   });
 
   // Add menu item form
@@ -88,6 +103,10 @@ export default function MyRestaurantPage() {
     setError("");
     setSaving(true);
     try {
+      const opening = restForm.openTime
+        ? `${restForm.openTime}-${restForm.closeTime || ""}`
+        : undefined;
+
       const created = await restaurantApi.create({
         name: restForm.name,
         description: restForm.description || undefined,
@@ -95,7 +114,7 @@ export default function MyRestaurantPage() {
         city: restForm.city,
         phone: restForm.phone || undefined,
         cuisine_type: restForm.cuisine_type || undefined,
-        opening_hours: restForm.opening_hours || undefined,
+        opening_hours: opening || undefined,
       } as Parameters<typeof restaurantApi.create>[0]);
       setRestaurants((prev) => [...prev, created]);
       selectRestaurant(created);
@@ -107,7 +126,8 @@ export default function MyRestaurantPage() {
         city: "",
         phone: "",
         cuisine_type: "",
-        opening_hours: "",
+        openTime: "",
+        closeTime: "",
       });
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to create");
@@ -150,16 +170,16 @@ export default function MyRestaurantPage() {
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
         <div>
           <h1 className="text-3xl font-bold">My Restaurant</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            Manage your restaurant and menu
+          <p className="text-gray-500 text-sm mt-1 max-w-2xl">
+            Manage your restaurant details, update your menu, and create new offerings with a modern control panel.
           </p>
         </div>
         <button
           onClick={() => setShowCreateForm(true)}
-          className="bg-[#06C167] hover:bg-[#05a758] text-white font-semibold px-6 py-2 rounded-full transition"
+          className="bg-[#06C167] hover:bg-[#05a758] text-white font-semibold px-6 py-3 rounded-full shadow-md transition"
         >
           + New Restaurant
         </button>
@@ -214,27 +234,29 @@ export default function MyRestaurantPage() {
           {/* Selected restaurant details */}
           {selectedRestaurant && (
             <div className="space-y-6">
-              <div className="bg-gray-50 rounded-2xl p-6">
-                <div className="flex items-start justify-between">
+              <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm">
+                <div className="grid gap-6 md:grid-cols-[1fr_auto] items-start">
                   <div>
-                    <h2 className="text-xl font-bold">
+                    <h2 className="text-2xl font-bold">
                       {selectedRestaurant.name}
                     </h2>
-                    <p className="text-gray-500 text-sm mt-1">
-                      {selectedRestaurant.cuisine_type} ·{" "}
-                      {selectedRestaurant.city}
+                    <p className="text-gray-500 text-sm mt-2">
+                      {selectedRestaurant.cuisine_type} · {selectedRestaurant.city}
                     </p>
                     {selectedRestaurant.description && (
-                      <p className="text-gray-500 text-sm mt-2">
+                      <p className="text-gray-500 text-sm mt-4 max-w-2xl leading-6">
                         {selectedRestaurant.description}
                       </p>
                     )}
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${selectedRestaurant.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}
-                  >
-                    {selectedRestaurant.is_active ? "Active" : "Inactive"}
-                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="inline-flex items-center justify-center rounded-full bg-gray-100 text-gray-700 text-xs font-semibold px-3 py-1">
+                      {selectedRestaurant.is_active ? "Active" : "Inactive"}
+                    </span>
+                    <span className="inline-flex items-center justify-center rounded-full bg-[#06C167]/10 text-[#057A4F] text-xs font-semibold px-3 py-1">
+                      {selectedRestaurant.cuisine_type}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -270,13 +292,19 @@ export default function MyRestaurantPage() {
                           🍽️
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-sm truncate">
+                          <h4 className="font-semibold text-sm truncate">
                             {item.name}
                           </h4>
-                          <p className="text-xs text-gray-500">
-                            {item.category || "Uncategorized"}
-                          </p>
-                          <div className="flex items-center justify-between mt-1">
+                          <div className="flex flex-wrap items-center gap-2 mt-1 text-xs">
+                            <span className="text-gray-500">
+                              {item.category || "Uncategorized"}
+                            </span>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-gray-500">
+                              {item.preparation_time} mins prep
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 gap-3">
                             <span className="font-bold text-sm">
                               RS {item.price.toFixed(2)}
                             </span>
@@ -343,15 +371,23 @@ export default function MyRestaurantPage() {
                   required
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
                 />
-                <input
-                  type="text"
-                  placeholder="Cuisine type"
+                <select
                   value={restForm.cuisine_type}
                   onChange={(e) =>
                     setRestForm((f) => ({ ...f, cuisine_type: e.target.value }))
                   }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
-                />
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none bg-white"
+                >
+                  <option value="" disabled>
+                    Select cuisine type *
+                  </option>
+                  {CUISINE_OPTIONS.map((cuisine) => (
+                    <option key={cuisine} value={cuisine}>
+                      {cuisine}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <input
@@ -363,18 +399,26 @@ export default function MyRestaurantPage() {
                   }
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
                 />
-                <input
-                  type="text"
-                  placeholder="Opening hours"
-                  value={restForm.opening_hours}
-                  onChange={(e) =>
-                    setRestForm((f) => ({
-                      ...f,
-                      opening_hours: e.target.value,
-                    }))
-                  }
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="time"
+                    placeholder="Open time"
+                    value={restForm.openTime}
+                    onChange={(e) =>
+                      setRestForm((f) => ({ ...f, openTime: e.target.value }))
+                    }
+                    className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
+                  />
+                  <input
+                    type="time"
+                    placeholder="Close time"
+                    value={restForm.closeTime}
+                    onChange={(e) =>
+                      setRestForm((f) => ({ ...f, closeTime: e.target.value }))
+                    }
+                    className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
+                  />
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button
