@@ -239,6 +239,7 @@ Restaurant https://food-ordering-restaurant-svc.azurewebsites.net
 Notification https://food-ordering-notification-svc.azurewebsites.net
 Frontend https://food-ordering-frontend-svc.azurewebsites.net
 
+<!--
 az webapp deployment list-publishing-profiles --name food-ordering-user-svc --resource-group rg-food-ordering --xml
 
 az webapp deployment list-publishing-profiles --name food-ordering-order-svc --resource-group rg-food-ordering --xml
@@ -247,4 +248,4 @@ az webapp deployment list-publishing-profiles --name food-ordering-restaurant-sv
 
 az webapp deployment list-publishing-profiles --name food-ordering-notification-svc --resource-group rg-food-ordering --xml
 
-az webapp deployment list-publishing-profiles --name food-ordering-frontend-svc --resource-group rg-food-ordering --xml
+az webapp deployment list-publishing-profiles --name food-ordering-frontend-svc --resource-group rg-food-ordering --xml -->
