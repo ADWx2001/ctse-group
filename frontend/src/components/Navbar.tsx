@@ -12,6 +12,9 @@ export default function Navbar() {
   const { unreadCount } = useNotifications();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Log user role for debugging
+  console.log("Logged in user role:", user?.role);
+
   const isOwner = user?.role === "restaurant_owner";
   const isAdmin = user?.role === "admin";
 
@@ -28,7 +31,7 @@ export default function Navbar() {
               🍔
             </span>
             <span>
-              Food<span className="text-[#06C167]">Order</span>
+              SLIIT Food<span className="text-[#06C167]">Order System</span>
               {isOwner && (
                 <span className="ml-2 text-xs font-normal text-[#06C167] border border-[#06C167] rounded-full px-2 py-0.5">
                   Owner

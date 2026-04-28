@@ -7,6 +7,15 @@ import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationContext";
 import { notificationApi, type Notification } from "@/lib/api";
 
+interface CreateNotificationForm {
+  user_id: string | null;
+  user_email: string | null;
+  type: string;
+  title: string;
+  message: string;
+  send_email: boolean;
+}
+
 export default function NotificationsPage() {
   const { user, loading: authLoading } = useAuth();
   const { refetch } = useNotifications();
@@ -14,7 +23,22 @@ export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState<CreateNotificationForm>({
+    user_id: null,
+    user_email: null,
+    type: "manual_announcement",
+    title: "",
+    message: "",
+    send_email: false,
+  });
+  const [creating, setCreating] = useState(false);
 
+  const isAdmin = user?.role === "admin";
+  const isOwner = user?.role === "restaurant_owner";
+  const canCreateNotifications = isAdmin || isOwner;
+
+  
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
@@ -42,6 +66,72 @@ export default function NotificationsPage() {
     }
   };
 
+  const deleteNotification = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this notification?")) {
+      return;
+    }
+    
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL || "http://localhost:3004"}/api/notifications/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+      refetch();
+    } catch {
+      // ignore
+    }
+  };
+
+  const createNotification = async () => {
+    if (!createForm.title || !createForm.message) {
+      alert("Please fill in title and message");
+      return;
+    }
+
+    setCreating(true);
+    try {
+      // Use form data directly for targeting specific users
+      const notificationData = {
+        ...createForm,
+      };
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_NOTIFICATION_SERVICE_URL || "http://localhost:3004"}/api/notifications/admin/send`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(notificationData),
+      });
+
+      if (response.ok) {
+        const newNotification = await response.json();
+        setNotifications((prev) => [newNotification, ...prev]);
+        setShowCreateModal(false);
+        setCreateForm({
+          user_id: "",
+          user_email: "",
+          type: "manual_announcement",
+          title: "",
+          message: "",
+          send_email: false,
+        });
+        refetch();
+      } else {
+        const error = await response.json();
+        alert(`Failed to create notification: ${error.detail || "Unknown error"}`);
+      }
+    } catch (error) {
+      alert("Failed to create notification. Please try again.");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (authLoading || (!user && !authLoading)) return null;
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
@@ -58,6 +148,14 @@ export default function NotificationsPage() {
           )}
         </div>
         <div className="flex gap-2">
+          {canCreateNotifications && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 rounded-full text-sm font-medium transition bg-[#06C167] text-white hover:bg-[#05a057]"
+            >
+              Create
+            </button>
+          )}
           <button
             onClick={() => setFilter("all")}
             className={`px-4 py-2 rounded-full text-sm font-medium transition ${
@@ -136,6 +234,15 @@ export default function NotificationsPage() {
                         View Order →
                       </Link>
                     )}
+                    {(isAdmin || isOwner) && notif.user_id === "system" && (
+                      <button
+                        onClick={() => deleteNotification(notif.id)}
+                        className="text-xs text-red-500 hover:text-red-700 whitespace-nowrap"
+                        title="Delete notification"
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
                   </div>
                 </div>
                 {!notif.is_read && (
@@ -149,6 +256,82 @@ export default function NotificationsPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Create Notification Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-bold mb-4">Create Notification</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Type</label>
+                <select
+                  value={createForm.type}
+                  onChange={(e) => setCreateForm({ ...createForm, type: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#06C167]"
+                >
+                  <option value="manual_announcement">Announcement</option>
+                  <option value="system_update">System Update</option>
+                  <option value="promotion">Promotion</option>
+                  <option value="reminder">Reminder</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Title *</label>
+                <input
+                  type="text"
+                  value={createForm.title}
+                  onChange={(e) => setCreateForm({ ...createForm, title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#06C167]"
+                  placeholder="Enter notification title"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">Message *</label>
+                <textarea
+                  value={createForm.message}
+                  onChange={(e) => setCreateForm({ ...createForm, message: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#06C167]"
+                  placeholder="Enter notification message"
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="send_email"
+                  checked={createForm.send_email}
+                  onChange={(e) => setCreateForm({ ...createForm, send_email: e.target.checked })}
+                  className="mr-2"
+                />
+                <label htmlFor="send_email" className="text-sm">
+                  Send email notification
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={createNotification}
+                disabled={creating}
+                className="flex-1 px-4 py-2 bg-[#06C167] text-white rounded-lg hover:bg-[#05a057] disabled:opacity-50"
+              >
+                {creating ? "Creating..." : "Create"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

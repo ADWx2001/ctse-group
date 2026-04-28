@@ -1,25 +1,36 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import DeclarativeBase
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import MongoClient
 import os
+from typing import AsyncGenerator
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./notifications.db")
+# MongoDB connection
+MONGODB_URL = os.getenv("DATABASE_URL", "mongodb://localhost:27017")
+MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "notifications_db")
 
-connect_args = {"check_same_thread": False} if "sqlite" in DATABASE_URL else {}
-
-engine = create_async_engine(DATABASE_URL, connect_args=connect_args, echo=False)
-AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-
-
-class Base(DeclarativeBase):
-    pass
-
+# Create MongoDB client
+client = AsyncIOMotorClient(MONGODB_URL)
+database = client[MONGODB_DB_NAME]
 
 async def init_db():
-    async with engine.begin() as conn:
-        from app import models  # noqa: F401
-        await conn.run_sync(Base.metadata.create_all)
+    """Initialize MongoDB database and create indexes."""
+    try:
+        # Test connection
+        await client.admin.command('ping')
+        print("Connected to MongoDB successfully!")
+        
+        # Create indexes for better performance
+        await database.notifications.create_index("user_id")
+        await database.notifications.create_index("created_at")
+        await database.notifications.create_index([("user_id", 1), ("created_at", -1)])
+        
+    except Exception as e:
+        print(f"MongoDB connection error: {e}")
+        raise
 
+async def get_db() -> AsyncGenerator:
+    """Get MongoDB database instance."""
+    yield database
 
-async def get_db():
-    async with AsyncSessionLocal() as session:
-        yield session
+async def close_db():
+    """Close MongoDB connection."""
+    client.close()
