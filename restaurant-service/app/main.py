@@ -1,10 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import logging
+import os
 
 from app.database import init_db
 from app.routers import restaurants, menu
+
+UPLOAD_DIR = "static/menu-images"
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -12,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialize database on startup."""
     logger.info("[Restaurant Service] Starting up...")
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
     await init_db()
     logger.info("[Restaurant Service] Database initialized.")
     yield
@@ -47,5 +51,6 @@ async def health_check():
     }
 
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(restaurants.router, prefix="/api/restaurants", tags=["Restaurants"])
 app.include_router(menu.router, prefix="/api/menu", tags=["Menu"])
