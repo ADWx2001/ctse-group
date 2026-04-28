@@ -213,7 +213,7 @@ export default function RestaurantDetailPage() {
                     )}
                     <div className="mt-auto flex items-center justify-between pt-2">
                       <span className="font-bold text-sm">
-                        ${item.price.toFixed(2)}
+                        RS {item.price.toFixed(2)}
                       </span>
                       {item.is_available && user ? (
                         <div className="flex items-center gap-2">
