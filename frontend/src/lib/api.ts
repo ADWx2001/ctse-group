@@ -189,6 +189,25 @@ export const restaurantApi = {
       `${API_URLS.restaurant}/api/menu/restaurant/${restaurantId}`,
       { method: "POST", body: JSON.stringify(data) },
     ),
+
+  uploadMenuItemImage: async (itemId: string, file: File): Promise<MenuItem> => {
+    const token = getToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(
+      `${API_URLS.restaurant}/api/menu/${itemId}/image`,
+      {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        body: formData,
+      },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new ApiError(body.error || body.detail || res.statusText, res.status);
+    }
+    return res.json();
+  },
 };
 
 // ─── Orders ────────────────────────────────────────────────────────────

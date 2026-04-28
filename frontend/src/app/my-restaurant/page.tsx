@@ -54,6 +54,8 @@ export default function MyRestaurantPage() {
     category: "",
     preparation_time: "15",
   });
+  const [menuImage, setMenuImage] = useState<File | null>(null);
+  const [menuImagePreview, setMenuImagePreview] = useState<string | null>(null);
 
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
@@ -130,13 +132,23 @@ export default function MyRestaurantPage() {
     }
   };
 
+  const handleMenuImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setMenuImage(file);
+    if (file) {
+      setMenuImagePreview(URL.createObjectURL(file));
+    } else {
+      setMenuImagePreview(null);
+    }
+  };
+
   const handleAddMenuItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedRestaurant) return;
     setError("");
     setSaving(true);
     try {
-      const item = await restaurantApi.addMenuItem(selectedRestaurant.id, {
+      let item = await restaurantApi.addMenuItem(selectedRestaurant.id, {
         name: menuForm.name,
         description: menuForm.description || undefined,
         price: parseFloat(menuForm.price),
@@ -144,15 +156,16 @@ export default function MyRestaurantPage() {
         is_available: true,
         preparation_time: parseInt(menuForm.preparation_time) || 15,
       } as Parameters<typeof restaurantApi.addMenuItem>[1]);
+
+      if (menuImage) {
+        item = await restaurantApi.uploadMenuItemImage(item.id, menuImage);
+      }
+
       setMenuItems((prev) => [...prev, item]);
       setShowMenuForm(false);
-      setMenuForm({
-        name: "",
-        description: "",
-        price: "",
-        category: "",
-        preparation_time: "15",
-      });
+      setMenuForm({ name: "", description: "", price: "", category: "", preparation_time: "15" });
+      setMenuImage(null);
+      setMenuImagePreview(null);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Failed to add item");
     } finally {
@@ -282,8 +295,12 @@ export default function MyRestaurantPage() {
                         key={item.id}
                         className="flex gap-3 p-3 border border-gray-200 rounded-xl"
                       >
-                        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-2xl flex-shrink-0">
-                          🍽️
+                        <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center text-2xl flex-shrink-0 overflow-hidden">
+                          {item.image_url ? (
+                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>🍽️</span>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <h4 className="font-semibold text-sm truncate">
@@ -486,6 +503,33 @@ export default function MyRestaurantPage() {
                 }
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#06C167] focus:border-transparent outline-none"
               />
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Item Image <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={handleMenuImageChange}
+                  className="w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-[#06C167]/10 file:text-[#057A4F] hover:file:bg-[#06C167]/20 cursor-pointer"
+                />
+                {menuImagePreview && (
+                  <div className="mt-2 relative w-24 h-24">
+                    <img
+                      src={menuImagePreview}
+                      alt="Preview"
+                      className="w-24 h-24 object-cover rounded-xl border border-gray-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { setMenuImage(null); setMenuImagePreview(null); }}
+                      className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
